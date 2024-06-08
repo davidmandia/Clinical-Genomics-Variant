@@ -35,13 +35,23 @@ python identify_indels.py example.sam
 The script will output a text file containing the identified indels in the SAM file, along with their positions. Each indel will be represented by a line with the following format:
 
 ```
-{read_id}: [{operation}, {length}, {position}]
+{read_id}: [{genome_reference}, ({operation}, {length}, {position})]
+```
+
+
+### Example Output
+
+```sh
+NM_001291345.2: [('NC_000001.10', (('I', 1, 335),))]
+NM_001290264.2: ['NC_000001.10', [('I', 1, 1261)]]
+NR_146199.1: ['NC_000001.10', [('I', 1, 50)]]
+NM_015378.4: ['NC_000001.10', [('I', 2, 280521)]]
+`
 ```
 
 For example:
 
-```
-NR_039983.1: [('D', 1, 143)]
+NM_001291345.2: ['NC_000001.10', [('I', 1, 335)]]
 NM_024796.1: [('I', 1, 112)]
 NM_005101.2: [('D', 1, 350)]
 ```

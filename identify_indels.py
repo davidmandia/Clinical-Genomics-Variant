@@ -44,6 +44,7 @@ def parse_sam(file_path):
                 cigar_indel = identify_short_indels(cigar)
                 if len(cigar_indel) > 0:
                     indels_obj[read_id] = []
+                    indels_obj[read_id].append(genome_ref)
                     indels_obj[read_id].append(cigar_indel)
                     
         return indels_obj

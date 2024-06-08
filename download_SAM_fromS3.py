@@ -1,9 +1,12 @@
-import csv
-import re
-import requests
+import sys
 
-# Install requests if not already installed
-!pip install requests
+# Check if the requests module is installed
+try:
+    import requests
+except ImportError:
+    print("The 'requests' module is not installed.")
+    print("Please install it using 'pip install requests' and then run this script again.")
+    sys.exit(1)
 
 # Define the public URL of GRch 38 S3 file
 public_url = 'https://rp2clinicalgenomicsdavidmandia.s3.amazonaws.com/output_GCF_000001405.40-RS_2023_03_knownrefseq_alns.sam'

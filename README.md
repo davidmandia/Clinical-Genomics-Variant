@@ -8,6 +8,9 @@ This Python script processes a SAM file to identify short indels (insertions and
 - argparse module (usually included with Python)
 - re module (usually included with Python)
 - os module (usually included with Python)
+- requests module (install it using `pip install requests`)
+
+Additionally, you can download reference genome SAM files (GRCh37 and GRCh38) by running the `download_SAM_fromS3.py` Python script provided in the repository.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # SAM File Short Indel Identifier
 
-This Python script processes a SAM file to identify short indels (insertions and deletions) in the alignment data. The script identifies indels with lengths less than or equal to 3 and outputs the results to a text file.
+This Python script processes a SAM file to identify short indels (insertions and deletions) in the alignment data. The script identifies indels with lengths less than 3 and outputs the results to a text file, including the position of each indel.
 
 ## Requirements
 
@@ -29,15 +29,18 @@ python identify_indels.py example.sam
 
 ## Output
 
-The script will output a text file containing the identified indels in the SAM file. Each indel will be represented by a line with the following format:
+The script will output a text file containing the identified indels in the SAM file, along with their positions. Each indel will be represented by a line with the following format:
 
 ```
-{read_id}: {indels}
+{read_id}: [{operation}, {length}, {position}]
 ```
 
 For example:
 
 ```
-NR_039983.1: [[('D', 1)]]
-NM_024796.1: [[('I', 1)]]
-NM_005101.2: [[('D', 1)]]
+NR_039983.1: [('D', 1, 143)]
+NM_024796.1: [('I', 1, 112)]
+NM_005101.2: [('D', 1, 350)]
+```
+
+

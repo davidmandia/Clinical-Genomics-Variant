@@ -8,7 +8,7 @@ def identify_short_indels(cigar_string):
     
     # List to store short indels
     short_indels = []
-    
+    position  = 0
     # Iterate through each operation in the CIGAR string
     for length, op in re.findall(cigar_pattern, cigar_string):
         # Check if the operation is an insertion (I) or deletion (D)
@@ -19,12 +19,16 @@ def identify_short_indels(cigar_string):
             # Check if the length of the indel is less than or equal to 3
             if length < 3:
                 # Append the operation and length to the short indels list
-                short_indels.append((op, length))
+                short_indels.append((op, length, position))
+
+        # Update the position to account for the indel  
+        position += int(length)
+
     
     return short_indels
 
 def parse_sam(file_path):
-    alignments = {}
+    indels_obj = {}
     try:
         with open(file_path, 'r') as file:
             for line in file:
@@ -39,10 +43,10 @@ def parse_sam(file_path):
                 cigar = fields[5]
                 cigar_indel = identify_short_indels(cigar)
                 if len(cigar_indel) > 0:
-                    alignments[read_id] = []
-                    alignments[read_id].append(cigar_indel)
+                    indels_obj[read_id] = []
+                    indels_obj[read_id].append(cigar_indel)
                     
-        return alignments
+        return indels_obj
     except Exception as e:
         print(f"Error reading SAM file: {e}")
         return {}
@@ -63,7 +67,7 @@ def main():
         print("Error: The provided file does not exist.")
         return
     
-    alignments = parse_sam(args.sam_file)
+    indels_obj = parse_sam(args.sam_file)
     
     # Create the "outputs" directory if it doesn't exist
     output_dir = "outputs"
@@ -75,7 +79,7 @@ def main():
     # Write the results to the output file
     try:
         with open(output_file_name, 'w') as output_file:
-            for read_id, indels in alignments.items():
+            for read_id, indels in indels_obj.items():
                 output_file.write(f"{read_id}: {indels}\n")
         print(f"Results have been written to {output_file_name}")
     except Exception as e:

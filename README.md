@@ -59,3 +59,24 @@ NR_146199.1: ['NC_000001.10', [('X', 1, 50)]]
 NM_015378.4: ['NC_000001.10', [('X', 2, 280521)]]
 ```
 
+## Converting BAM to SAM
+You can convert a BAM file to SAM using the provided Bash script bam_to_sam_converter.sh. This script takes two arguments: the input BAM file and the output SAM file. Make sure you have samtools installed on your system before running this script.
+
+### Requirements for conversion from Bam to Sam
+
+``` sh
+sudo apt-get update
+sudo apt-get install samtools
+```
+Before using the converter you have to run to make it executable 
+
+``` sh
+chmod +x bam_to_sam_converter.sh
+```
+### Usage of converter
+
+``` sh
+bash convert_bam_to_sam.sh input.bam output.sam
+```
+
+

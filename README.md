@@ -2,6 +2,9 @@
 
 This Python script processes a SAM file to identify short indels (insertions and deletions) in the alignment data. The script identifies indels with lengths less than 3 and outputs the results to a text file, including the position of each indel.
 
+
+If Mismatches are present, they will be present in the mismatch text file in output
+
 ## Requirements
 
 - Python 3.6 or higher
@@ -40,7 +43,7 @@ The script will output a text file containing the identified indels in the SAM f
 
 
 ### Example Output
-
+#### Indels
 ```sh
 NM_001291345.2: [('NC_000001.10', (('I', 1, 335),))]
 NM_001290264.2: ['NC_000001.10', [('I', 1, 1261)]]
@@ -48,3 +51,11 @@ NR_146199.1: ['NC_000001.10', [('I', 1, 50)]]
 NM_015378.4: ['NC_000001.10', [('I', 2, 280521)]]
 `
 ```
+#### Mismatches
+```sh
+NM_001291345.2: ['NC_000001.10', [('X', 1, 335)]]
+NM_001290264.2: ['NC_000001.10', [('X', 1, 1261)]]
+NR_146199.1: ['NC_000001.10', [('X', 1, 50)]]
+NM_015378.4: ['NC_000001.10', [('X', 2, 280521)]]
+```
+

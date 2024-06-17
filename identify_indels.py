@@ -1,14 +1,14 @@
 import re
 import argparse
 import os
+import requests
 
-def identify_short_indels_and_mismatches(cigar_string):
+def identify_short_indels(cigar_string):
     # Regular expression to extract length and operation from CIGAR string
     cigar_pattern = re.compile(r'(\d+)([MIDNSHP=X])')
     
     # List to store short indels and mismatches
     short_indels = []
-    mismatches = []
     position = 0
     
     # Iterate through each operation in the CIGAR string
@@ -22,10 +22,6 @@ def identify_short_indels_and_mismatches(cigar_string):
                 # Append the operation, length, and position to the list
                 short_indels.append((op, length, position))
         
-        if op == 'X':
-            # Add mismatches to the list
-            mismatches.append((op, length, position))
-        
         # Update the position for match/mismatch
         if op in 'M=X':
             position += length
@@ -33,11 +29,33 @@ def identify_short_indels_and_mismatches(cigar_string):
         elif op in 'DN':
             position += length
     
-    return short_indels, mismatches
+    return short_indels
+
+
+
+def get_ncbi_sequence(accession, start=None, end=None):
+    base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+    params = {
+        "db": "nuccore",
+        "id": accession,
+        "rettype": "fasta",
+        "retmode": "text"
+    }
+    
+    # Add the sequence range if specified
+    if start is not None and end is not None:
+        params["seq_start"] = start
+        params["seq_stop"] = end
+
+    response = requests.get(base_url, params=params)
+
+    if response.status_code == 200:
+        return response.text
+    else:
+        response.raise_for_status()
 
 def parse_sam(file_path):
     indels_obj = {}
-    mismatches_obj = {}
     try:
         with open(file_path, 'r') as file:
             for line in file:
@@ -45,25 +63,26 @@ def parse_sam(file_path):
                     # Skip header lines
                     continue
                 fields = line.strip().split('\t')
+                #print(fields)
                 if len(fields) < 6:
                     raise ValueError("Invalid SAM format")
                 read_id = fields[0]
                 genome_ref = fields[2]
                 pos = int(fields[3])
                 cigar = fields[5]
-                cigar_indels, cigar_mismatches = identify_short_indels_and_mismatches(cigar)
-
+                cigar_indels = identify_short_indels(cigar)
+                
+                # At least one short indel was found (op, length, position)
                 if len(cigar_indels) > 0:
+                    genomics_ref_sequence = get_ncbi_sequence(genome_ref, start=0, end=10)
+                    #print(genomics_ref_sequence[cigar_indels[2] -3: cigar_indels[2] + 3])
+                    print(genomics_ref_sequence)
                     indels_obj[read_id] = []
                     indels_obj[read_id].append(genome_ref)
                     indels_obj[read_id].append(cigar_indels)
 
-                if len(cigar_mismatches) > 0:
-                    mismatches_obj[read_id] = []
-                    mismatches_obj[read_id].append(genome_ref)
-                    mismatches_obj[read_id].append(cigar_mismatches)
                     
-        return indels_obj, mismatches_obj
+        return indels_obj
     except FileNotFoundError:
         print(f"Error: The file {file_path} does not exist.")
         return {}, {}
@@ -87,7 +106,7 @@ def main():
         print("Error: The provided file does not exist.")
         return
     
-    indels_obj, mismatches_obj = parse_sam(args.sam_file)
+    indels_obj = parse_sam(args.sam_file)
     
     # Create the "outputs" directory if it doesn't exist
     output_dir = "outputs"
@@ -106,15 +125,7 @@ def main():
         print(f"Error writing to output file: {e}")
     
     # Write the results to the output file for mismatches
-    if mismatches_obj:
-        output_file_name_mismatches = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_mismatches.txt")
-        try:
-            with open(output_file_name_mismatches, 'w') as output_file:
-                for read_id, mismatches in mismatches_obj.items():
-                    output_file.write(f"{read_id}: {mismatches}\n")
-            print(f"Results have been written to {output_file_name_mismatches}")
-        except Exception as e:
-            print(f"Error writing to output file: {e}")
+
 
 if __name__ == "__main__":
     main()

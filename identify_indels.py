@@ -2,6 +2,11 @@ import re
 import argparse
 import os
 
+## Need to add genomics and trasncript position to cigar function
+## get genomics position of indels 
+## compare the two sequences 
+## generate VCF
+
 def identify_short_indels_and_mismatches(cigar_string):
     # Regular expression to extract length and operation from CIGAR string
     cigar_pattern = re.compile(r'(\d+)([MIDNSHP=X])')

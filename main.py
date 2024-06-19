@@ -49,7 +49,7 @@ def identify_short_indels(cigar_string):
         
         if op in ['I', 'D', 'N']:
             if length < 3:
-                short_indels.append((op, length, genomic_position, transcriptomic_position))
+                short_indels.append((op, length, genomic_position, transcriptomic_position, cigar_string))
         
         if op in 'M=X':
             genomic_position += length
@@ -86,7 +86,7 @@ def parse_sam(file_path):
                 
                 if len(cigar_indels) > 0:
                     for cigar_indel in cigar_indels:
-                        op, length, genomic_pos_offset, transcriptomic_pos_offset = cigar_indel
+                        op, length, genomic_pos_offset, transcriptomic_pos_offset, cigar_string = cigar_indel
                         genomic_pos = pos + genomic_pos_offset
                         transcript_sequence = fields[9]
                         
@@ -106,7 +106,7 @@ def parse_sam(file_path):
                                 'ALT': alt_seq,
                                 'QUAL': 99,
                                 'FILTER': 'PASS',
-                                'INFO': f'DP=100;LEN={length};TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT={read_id};TRANSCRIPT_POS={transcriptomic_pos_offset}'
+                                'INFO': f'DP=100;LEN= {length} ;TYPE= {"DEL" if op == "D" else "INS"} ;TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ; CIGAR: {cigar_string}'
                             })
                         except Exception as e:
                             missing_sequences.append({
@@ -115,7 +115,8 @@ def parse_sam(file_path):
                                 'TRANSCRIPT_POS': transcriptomic_pos_offset,
                                 'GENOME_POS': genomic_pos,
                                 'OP': op,
-                                'LENGTH': length
+                                'LENGTH': length,
+                                'CIGAR': cigar_string
                             })
         return indels, missing_sequences
     except FileNotFoundError:
@@ -139,10 +140,10 @@ def write_to_vcf(indels, output_file):
 # Function to write missing sequences to a text file
 def write_missing_sequences(missing_sequences, output_file):
     with open(output_file, 'w') as txt:
-        txt.write("TRANSCRIPT\tGENOME_REF\tTRANSCRIPT_POS\tGENOME_POS\tOP\tLENGTH\n")
+        txt.write("TRANSCRIPT\tGENOME_REF\tTRANSCRIPT_POS\tGENOME_POS\tOP\tLENGTH\t\CIGAR\n")
         
         for seq in missing_sequences:
-            txt.write(f"{seq['TRANSCRIPT']}\t{seq['GENOME_REF']}\t{seq['TRANSCRIPT_POS']}\t{seq['GENOME_POS']}\t{seq['OP']}\t{seq['LENGTH']}\n")
+            txt.write(f"{seq['TRANSCRIPT']}\t{seq['GENOME_REF']}\t{seq['TRANSCRIPT_POS']}\t{seq['GENOME_POS']}\t{seq['OP']}\t{seq['LENGTH']}\t{seq['CIGAR']}\n")
 
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")

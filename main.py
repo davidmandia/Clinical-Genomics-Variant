@@ -16,8 +16,10 @@ def get_ncbi_sequence(accession, start=None, end=None, retries=2):
     
     for attempt in range(retries):
         try:
+            # Make a request to fetch the sequence
             response = requests.get(base_url, params=params)
             response.raise_for_status()
+            # Parse the fetched sequence
             sequence = response.text.split('\n', 1)[1].replace('\n', '')
             if start and end:
                 return sequence[start-1:end]
@@ -65,6 +67,13 @@ def identify_short_indels(cigar_string):
     
     return short_indels
 
+# Function to extract chromosome number from the reference genome identifier
+def extract_chromosome_number(genome_ref):
+    match = re.search(r'NC_(\d+)', genome_ref)
+    if match:
+        return str(int(match.group(1)))  # Convert to integer and back to string to remove leading zeros
+    return genome_ref
+
 # Function to parse SAM file and format indels for VCF
 def parse_sam(file_path):
     indels = []
@@ -80,6 +89,7 @@ def parse_sam(file_path):
                     raise ValueError("Invalid SAM format")
                 read_id = fields[0]
                 genome_ref = fields[2]
+                chrom = extract_chromosome_number(genome_ref)
                 pos = int(fields[3])
                 cigar = fields[5]
                 cigar_indels = identify_short_indels(cigar)
@@ -99,14 +109,14 @@ def parse_sam(file_path):
                                 alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
                             
                             indels.append({
-                                'CHROM': fields[2],
+                                'CHROM': chrom,  # Use extracted chromosome number
                                 'POS': genomic_pos,
                                 'ID': '.',
                                 'REF': ref_seq,
                                 'ALT': alt_seq,
                                 'QUAL': 99,
                                 'FILTER': 'PASS',
-                                'INFO': f'DP=100;LEN= {length} ;TYPE= {"DEL" if op == "D" else "INS"} ;TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ; CIGAR: {cigar_string}'
+                                'INFO': f'DP=100;LEN= {length} ;TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ;CIGAR: {cigar_string} ;GENOME_REF= {genome_ref}'
                             })
                         except Exception as e:
                             missing_sequences.append({
@@ -131,7 +141,6 @@ def write_to_vcf(indels, output_file):
     with open(output_file, 'w') as vcf:
         vcf.write("##fileformat=VCFv4.2\n")
         vcf.write("##source=myVariantCaller\n")
-        vcf.write("##reference=NC_000001.10\n")
         vcf.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
         
         for indel in indels:
@@ -140,7 +149,7 @@ def write_to_vcf(indels, output_file):
 # Function to write missing sequences to a text file
 def write_missing_sequences(missing_sequences, output_file):
     with open(output_file, 'w') as txt:
-        txt.write("TRANSCRIPT\tGENOME_REF\tTRANSCRIPT_POS\tGENOME_POS\tOP\tLENGTH\t\CIGAR\n")
+        txt.write("TRANSCRIPT\tGENOME_REF\tTRANSCRIPT_POS\tGENOME_POS\tOP\tLENGTH\tCIGAR\n")
         
         for seq in missing_sequences:
             txt.write(f"{seq['TRANSCRIPT']}\t{seq['GENOME_REF']}\t{seq['TRANSCRIPT_POS']}\t{seq['GENOME_POS']}\t{seq['OP']}\t{seq['LENGTH']}\t{seq['CIGAR']}\n")
@@ -160,16 +169,20 @@ def main():
     if not os.path.isfile(args.sam_file):
         print("Error: The provided file does not exist.")
         return
-     
+    
     # Create the "outputs" directory if it doesn't exist
     output_dir = "outputs"
     os.makedirs(output_dir, exist_ok=True)
 
+    # Parse the SAM file
     indels_obj, missing_sequences = parse_sam(args.sam_file)
-    output_file_name_indels_VCF = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_indels.vcf")
-    write_to_vcf(indels_obj, output_file_name_indels_VCF)
-    print(f"VCF file created: {output_file_name_indels_VCF}")
     
+    # Write indels to a VCF file
+    output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_indels.vcf")
+    write_to_vcf(indels_obj, output_file_name_indels_vcf)
+    print(f"VCF file created: {output_file_name_indels_vcf}")
+    
+    # If there are missing sequences, write them to a text file
     if missing_sequences:
         output_file_name_missing_txt = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_missing_sequences.txt")
         write_missing_sequences(missing_sequences, output_file_name_missing_txt)

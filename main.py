@@ -4,6 +4,8 @@ import os
 import requests
 import time
 
+## I will add a feature to set reference sequence as * in the pseudocvf
+
 # Function to fetch and cache the reference genome sequence
 def get_ncbi_sequence(accession, start=None, end=None, retries=2):
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
@@ -53,17 +55,12 @@ def identify_short_indels(cigar_string):
             if length < 3:
                 short_indels.append((op, length, genomic_position, transcriptomic_position, cigar_string))
         
-        if op in 'M=X':
-            genomic_position += length
+        # Update the transcriptomic position
+        if op in 'MIS=X':
             transcriptomic_position += length
-        elif op == 'D':
+        # Update the genomic position for match/mismatch
+        if op in 'M=XDN':
             genomic_position += length
-        elif op == 'I':
-            transcriptomic_position += length
-        elif op == 'N':
-            genomic_position += length
-        elif op == 'S':
-            transcriptomic_position += length
     
     return short_indels
 
@@ -75,7 +72,7 @@ def extract_chromosome_number(genome_ref):
     return genome_ref
 
 # Function to parse SAM file and format indels for VCF
-def parse_sam(file_path):
+def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actual reference sequence 
     indels = []
     missing_sequences = []
     
@@ -102,10 +99,16 @@ def parse_sam(file_path):
                         
                         try:
                             if op == 'D':
-                                ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
+                                if pseudo == True:
+                                    ref_seq = "-"
+                                else: 
+                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
                                 alt_seq = ref_seq[0]  # Deletion
                             elif op == 'I':
-                                ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
+                                if pseudo == True:
+                                    ref_seq = "-"
+                                else:
+                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
                                 alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
                             
                             indels.append({
@@ -157,9 +160,9 @@ def write_missing_sequences(missing_sequences, output_file):
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
-    
+    parser.add_argument('--pseudo', type=bool,required=False, default= False, help="Provides or not the reference in the PseudoVCF")
     args = parser.parse_args()
-    
+    pseudo = args.pseudo
     # Check if the file has a .sam extension
     if not args.sam_file.lower().endswith('.sam'):
         print("Error: The provided file does not have a .sam extension.")
@@ -175,7 +178,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Parse the SAM file
-    indels_obj, missing_sequences = parse_sam(args.sam_file)
+    indels_obj, missing_sequences = parse_sam(args.sam_file, pseudo = False)
     
     # Write indels to a VCF file
     output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_indels.vcf")

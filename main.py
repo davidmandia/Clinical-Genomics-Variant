@@ -96,21 +96,24 @@ def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actua
                         op, length, genomic_pos_offset, transcriptomic_pos_offset, cigar_string = cigar_indel
                         genomic_pos = pos + genomic_pos_offset
                         transcript_sequence = fields[9]
-                        
-                        try:
-                            if op == 'D':
-                                if pseudo == True:
-                                    ref_seq = "-"
-                                else: 
-                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
-                                alt_seq = ref_seq[0]  # Deletion
-                            elif op == 'I':
-                                if pseudo == True:
-                                    ref_seq = "-"
-                                else:
-                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
-                                alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
+
+                        try: # Will not run API call if pseudo is set to True - generate Pseudo VCF
+                            if pseudo == True:
+                                if op == 'D':
+                                    ref_seq = "N"+"N"*length
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset -1]
+                                elif op == 'I':
+                                    ref_seq = "N"
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
                             
+                            elif pseudo == False: # Will do API call generating real VCF
+                                if op == 'D':
+                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
+                                    alt_seq = ref_seq[0]  # Deletion
+                                elif op == 'I':
+                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
+                                
                             indels.append({
                                 'CHROM': chrom,  # Use extracted chromosome number
                                 'POS': genomic_pos,
@@ -157,10 +160,21 @@ def write_missing_sequences(missing_sequences, output_file):
         for seq in missing_sequences:
             txt.write(f"{seq['TRANSCRIPT']}\t{seq['GENOME_REF']}\t{seq['TRANSCRIPT_POS']}\t{seq['GENOME_POS']}\t{seq['OP']}\t{seq['LENGTH']}\t{seq['CIGAR']}\n")
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
-    parser.add_argument('--pseudo', type=bool,required=False, default= False, help="Provides or not the reference in the PseudoVCF")
+    parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Provides or not the reference in the PseudoVCF")
+
     args = parser.parse_args()
     pseudo = args.pseudo
     # Check if the file has a .sam extension
@@ -178,10 +192,10 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Parse the SAM file
-    indels_obj, missing_sequences = parse_sam(args.sam_file, pseudo = False)
+    indels_obj, missing_sequences = parse_sam(args.sam_file, pseudo)
     
     # Write indels to a VCF file
-    output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_indels.vcf")
+    output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_{pseudo}_indels.vcf")
     write_to_vcf(indels_obj, output_file_name_indels_vcf)
     print(f"VCF file created: {output_file_name_indels_vcf}")
     

@@ -1,38 +1,63 @@
-import psycopg2
-from psycopg2 import Error
+import sqlite3
+import vobject
+import argparse
 
-endpoint = "variants.cjcmykm4g8ti.us-east-1.rds.amazonaws.com"
-database = "variants"
-user="postgres"
-password="postgres"
-
-# Function to connect to PostgreSQL database
-def connect_to_database():
-    try:
-        connection = psycopg2.connect(
-            user="your_username",
-            password="your_password",
-            host="your_postgresql_endpoint",  # Replace with your PostgreSQL endpoint
-            port="5432",                      # Replace with your PostgreSQL port
-            database="your_database_name"      # Replace with your PostgreSQL database name
+# Define the function to create the SQLite database and table
+def create_database(db_name):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    # Creating a table for variants with specified columns
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS variants (
+            chrom TEXT,
+            pos INTEGER,
+            id TEXT,
+            ref TEXT,
+            alt TEXT,
+            qual REAL,
+            filter TEXT,
+            info TEXT
         )
-        return connection
-    except (Exception, Error) as error:
-        print("Error while connecting to PostgreSQL:", error)
-        return None
+    ''')
+    conn.commit()
+    conn.close()
 
+# Define the function to parse VCF and insert data into the database
+def insert_data_from_vcf(vcf_file, db_name):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    
+    with open(vcf_file, 'r') as file:
+        for line in file:
+            if line.startswith('#'):
+                continue  # Skip header lines
+            parts = line.strip().split('\t')
+            if len(parts) < 8:
+                continue  # Skip malformed lines
+            
+            chrom, pos, var_id, ref, alt, qual, filter_, info = parts[:8]
+            qual = float(qual) if qual != '.' else None
+            
+            cursor.execute('''
+                INSERT INTO variants (chrom, pos, id, ref, alt, qual, filter, info)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (chrom, int(pos), var_id, ref, alt, qual, filter_, info))
+    
+    conn.commit()
+    conn.close()
+
+# Define the main function to call the above functions
 def main():
-    # Connect to the database
-    connection = connect_to_database()
+    parser = argparse.ArgumentParser(description="Process a VCF file to store variants in a SQLlite database.")
+    parser.add_argument('vcf',  help="Provides the VCF file to add to the database")
 
-    if connection:
-        print("Successfully connected to the database!")
+    args = parser.parse_args()
+    db_name = 'variants.db'
+    vcf_file = args.vcf
+    
+    create_database(db_name)
+    insert_data_from_vcf(vcf_file, db_name)
+    print(f'Data from {vcf_file} has been inserted into {db_name}')
 
-        # Further database operations can be performed here
-
-        # Remember to close the connection when done
-        connection.close()
-        print("Connection closed.")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

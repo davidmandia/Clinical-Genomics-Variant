@@ -2,7 +2,14 @@ import requests
 import argparse
 import json
 
-
+#https://github.com/aws-samples/aws-genomics-datalake/blob/main/1000Genomes.ipynb
+#https://gnomad.broadinstitute.org/variant/1-55051215-G-GA?dataset=gnomad_r4
+#https://gnomad.broadinstitute.org/downloads#v4-resources
+#https://registry.opendata.aws/broad-gnomad/ 
+#https://gnomad.broadinstitute.org/news/2023-11-gnomad-v4-0/
+#https://broadinstitute.github.io/gnomad_methods/api_reference/utils/vep.html#gnomad.utils.vep.CURRENT_VEP_VERSION
+#https://rest.ensembl.org/#VEP
+#https://rest.ensembl.org/documentation/info/vep_hgvs_get
 
 # Function to fetch gnomAD data for a variant
 def fetch_gnomad_data(chrom, pos, ref, alt):

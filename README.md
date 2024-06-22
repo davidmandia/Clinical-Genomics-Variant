@@ -24,32 +24,34 @@ Additionally, you can download reference genome SAM files (GRCh37 and GRCh38) by
 ### Command Line Usage
 
 ```sh
-python identify_indels.py path/to/your/samfile.sam
+python main.py path/to/your/samfile.sam
 ```
 
 ### Example
 
 ```sh
-python identify_indels.py example.sam
+python main.py sample.sam
 ```
 
 ## Output
 
-The script will output a text file containing the identified indels in the SAM file, along with their positions. Each indel will be represented by a line with the following format:
+The script will output a VCF text file containing the identified indels in the SAM file, along with their positions. Additional info about the variant is present on the INFO section 
 
 ```
-{read_id}: [{genome_reference}, ({operation}, {length}, {position})]
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	136889	.	NN	A	99	PASS	DP=100;LEN= 1 ;TYPE=DEL;TRANSCRIPT= NR_039983.1 ;TRANSCRIPT_POS= 45 ;CIGAR: 3=1X11=1X2=1X16=1X9=1D6=3X9=1X2=1X2785=93N58=227N492= ;GENOME_REF= NC_000001.11
+
 ```
 
 
 ### Example Output
 #### Indels
 ```sh
-NM_001291345.2: [('NC_000001.10', (('I', 1, 335),))]
-NM_001290264.2: ['NC_000001.10', [('I', 1, 1261)]]
-NR_146199.1: ['NC_000001.10', [('I', 1, 50)]]
-NM_015378.4: ['NC_000001.10', [('I', 2, 280521)]]
-`
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	136889	.	GG	G	99	PASS	DP=100;LEN= 1 ;TYPE=DEL;TRANSCRIPT= NR_039983.1 ;TRANSCRIPT_POS= 45 ;CIGAR: 3=1X11=1X2=1X16=1X9=1D6=3X9=1X2=1X2785=93N58=227N492= ;GENOME_REF= NC_000001.11
+1	826578	.	C	CT	99	PASS	DP=100;LEN= 1 ;TYPE=INS;TRANSCRIPT= NM_024796.1 ;TRANSCRIPT_POS= 405 ;CIGAR: 33S146=1X19=1X47=1X10=1X146=1I315=1X315=1X2=1X8=1X30=1X254= ;GENOME_REF= NC_000001.11
+1	1014534	.	AG	A	99	PASS	DP=100;LEN= 1 ;TYPE=DEL;TRANSCRIPT= NM_005101.2 ;TRANSCRIPT_POS= 628 ;CIGAR: 78=407N104=1X92=1X92=1X259=1D5= ;GENOME_REF= NC_000001.11
+1	1014534	.	AG	A	99	PASS	DP=100;LEN= 1 ;TYPE=DEL;TRANSCRIPT= NM_005101.1 ;TRANSCRIPT_POS= 628 ;CIGAR: 78=407N104=1X92=1X92=1X259=1D5=1S ;GENOME_REF= NC_000001.11
 ```
 
 ```

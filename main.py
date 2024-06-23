@@ -189,7 +189,7 @@ def main():
         return
     
     # Create the "outputs" directory if it doesn't exist
-    output_dir = "outputs"
+    output_dir = "outputs_vcf"
     os.makedirs(output_dir, exist_ok=True)
 
     # Parse the SAM file

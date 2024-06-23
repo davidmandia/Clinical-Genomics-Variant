@@ -1,6 +1,6 @@
 import sqlite3
-import vobject
 import argparse
+import os
 
 # Define the function to create the SQLite database and table
 def create_database(db_name):
@@ -48,13 +48,16 @@ def insert_data_from_vcf(vcf_file, db_name):
 
 # Define the main function to call the above functions
 def main():
-    parser = argparse.ArgumentParser(description="Process a VCF file to store variants in a SQLlite database.")
-    parser.add_argument('vcf',  help="Provides the VCF file to add to the database")
+    parser = argparse.ArgumentParser(description="Process a VCF file to store variants in a SQLite database.")
+    parser.add_argument('vcf', help="Provides the VCF file to add to the database")
 
     args = parser.parse_args()
-    db_name = 'variants.db'
     vcf_file = args.vcf
-    
+    vcf_name = os.path.basename(vcf_file).split('.')[0]  # Get the base name of the file without extension
+    db_folder = 'databases'
+    os.makedirs(db_folder, exist_ok=True)
+    db_name = os.path.join(db_folder, f'{vcf_name}_variant.db')
+
     create_database(db_name)
     insert_data_from_vcf(vcf_file, db_name)
     print(f'Data from {vcf_file} has been inserted into {db_name}')

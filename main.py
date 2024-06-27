@@ -1,11 +1,9 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 import re
 import argparse
 import os
 import requests
 import time
-
-## I will add a feature to set reference sequence as * in the pseudocvf
 
 # Function to fetch and cache the reference genome sequence
 def get_ncbi_sequence(accession, start=None, end=None, retries=2):
@@ -105,7 +103,7 @@ def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actua
                                     alt_seq = transcript_sequence[transcriptomic_pos_offset -1]
                                 elif op == 'I':
                                     ref_seq = "N"
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
                             
                             elif pseudo == False: # Will do API call generating real VCF
                                 if op == 'D':
@@ -113,7 +111,20 @@ def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actua
                                     alt_seq = ref_seq[0]  # Deletion
                                 elif op == 'I':
                                     ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset:transcriptomic_pos_offset + length]
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
+
+                                # Verify the sequences
+                                if op == 'D':
+                                    genomic_ref_check = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
+                                    if ref_seq != genomic_ref_check:
+                                        print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
+                                elif op == 'I':
+                                    genomic_ref_check = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
+                                    transcript_alt_check = transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
+                                    if ref_seq != genomic_ref_check:
+                                        print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
+                                    if alt_seq[1:] != transcript_alt_check:
+                                        print(f"Error: ALT sequence does not match transcript sequence for {read_id} at transcript position {transcriptomic_pos_offset}")
                                 
                             indels.append({
                                 'CHROM': chrom,  # Use extracted chromosome number

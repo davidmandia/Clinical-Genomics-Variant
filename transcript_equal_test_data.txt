@@ -24,3 +24,7 @@ NM_000949.6:c.*6527_*6529= submitted_variant NC_000005.9:g.35058665_35058666CA= 
 NM_001204314.2:c.*6527_*6529= submitted_variant NC_000005.9:g.35058665_35058666CA= NC_000005.10:g.35058560_35058562= NC_000005.9:g.35058667dup PRLR
 NM_000828.4:c.-2= NC_000023.11:g.123184534= NC_000023.10:g.122318386_122318387insG GRIA3
 NM_014249.4:c.951_952= NC_000015.10:g.71813592_71813593= NC_000015.9:g.72105933del NR2E3
+
+
+## Uncertain about position. They seem to be +1 in VCF comapred to test 
+## Verified using  NC_000005.10:g.35058560_35058562 and attempt.py file with a transcitp position 

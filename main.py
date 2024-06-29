@@ -2,43 +2,23 @@
 import re
 import argparse
 import os
-import requests
-import time
+import subprocess
 
-# Function to fetch and cache the reference genome sequence
-def get_ncbi_sequence(accession, start=None, end=None, retries=2):
-    base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-    params = {
-        "db": "nuccore",
-        "id": accession,
-        "rettype": "fasta",
-        "retmode": "text"
-    }
+# Function to fetch the reference genome sequence using BLAST database
+def get_sequence_blast_db(db, accession, start=None, end=None):
+    # Construct the blastdbcmd command
+    cmd = ["blastdbcmd", "-db", db, "-entry", accession]
     
-    for attempt in range(retries):
-        try:
-            # Make a request to fetch the sequence
-            response = requests.get(base_url, params=params)
-            response.raise_for_status()
-            # Parse the fetched sequence
-            sequence = response.text.split('\n', 1)[1].replace('\n', '')
-            if start and end:
-                return sequence[start-1:end]
-            return sequence
-        except requests.exceptions.RequestException as e:
-            if attempt < retries - 1:
-                print(f"Error fetching reference sequence, retrying... ({attempt + 1}/{retries})")
-                time.sleep(1)
-            else:
-                raise Exception(f"Failed to fetch sequence after {retries} retries: {e}")
-
-# Cache the sequence
-reference_sequences = {}
-
-def get_sequence_cached(accession, start, end):
-    if accession not in reference_sequences:
-        reference_sequences[accession] = get_ncbi_sequence(accession)
-    return reference_sequences[accession][start-1:end]
+    if start and end:
+        cmd.extend(["-range", f"{start}-{end}"])
+    
+    try:
+        # Execute the command and fetch the sequence
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        sequence = "".join(result.stdout.split("\n")[1:])  # Skip the first line which is the header
+        return sequence
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Error fetching reference sequence from BLAST DB: {e}")
 
 # Function to identify short indels and provide data formatted for VCF
 def identify_short_indels(cigar_string):
@@ -71,7 +51,7 @@ def extract_chromosome_number(genome_ref):
     return genome_ref
 
 # Function to parse SAM file and format indels for VCF
-def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actual reference sequence 
+def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the actual reference sequence 
     indels = []
     missing_sequences = []
     
@@ -105,21 +85,21 @@ def parse_sam(file_path, pseudo = False): # If pseudo == False we want the actua
                                     ref_seq = "N"
                                     alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
                             
-                            elif pseudo == False: # Will do API call generating real VCF
+                            elif pseudo == False: # Will use BLAST DB to fetch the reference sequence
                                 if op == 'D':
-                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
+                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos + length)
                                     alt_seq = ref_seq[0]  # Deletion
                                 elif op == 'I':
-                                    ref_seq = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
+                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos)
                                     alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
 
                                 # Verify the sequences
                                 if op == 'D':
-                                    genomic_ref_check = get_sequence_cached(genome_ref, genomic_pos, genomic_pos + length)
+                                    genomic_ref_check = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos + length)
                                     if ref_seq != genomic_ref_check:
                                         print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
                                 elif op == 'I':
-                                    genomic_ref_check = get_sequence_cached(genome_ref, genomic_pos, genomic_pos)
+                                    genomic_ref_check = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos)
                                     transcript_alt_check = transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
                                     if ref_seq != genomic_ref_check:
                                         print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
@@ -185,6 +165,7 @@ def str2bool(v):
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
+    parser.add_argument('db', type=str, help="Path to the BLAST database")
     parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Provides or not the reference in the PseudoVCF")
 
     args = parser.parse_args()
@@ -204,7 +185,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Parse the SAM file
-    indels_obj, missing_sequences = parse_sam(args.sam_file, pseudo)
+    indels_obj, missing_sequences = parse_sam(args.sam_file, args.db, pseudo)
     
     # Write indels to a VCF file
     output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_{pseudo}_indels.vcf")

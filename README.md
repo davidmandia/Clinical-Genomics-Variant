@@ -1,5 +1,10 @@
 # SAM File Short Indel Identifier
 
+## Important:
+I will update the README shortly, but I have changed the script and the arguments. In the meanwhile, you can check the requirement fold. The programm.sh file will run all scripts for all file including all necessary packages, input files download, and all the scripts for all input files
+
+## Important
+
 This Python script processes a SAM file to identify short indels (insertions and deletions) in the alignment data. The script identifies indels with lengths less than 3 and outputs the results to a text file, including the position of each indel.
 
 

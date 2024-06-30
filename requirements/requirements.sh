@@ -1,4 +1,7 @@
+pip install requests
 pip install vobject
 
 pip install sqlite3
-sqlite3 variants.db
+
+## Initiate the database 
+#sqlite3 variants.db

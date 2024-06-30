@@ -1,10 +1,15 @@
-# Bash to run multiple script at the same time 
+Bash to run multiple script at the same time 
 
-# python main.py GRCh37.sam --pseudo True
-# python main.py GRCh37.sam --pseudo False
-# python main.py GRCh38.sam --pseudo True
-# python main.py GRCh38.sam --pseudo False
-python database_operations_variantions.py outputs/GRCh37_False_indels.vcf 
-python database_operations_variantions.py outputs/GRCh37_True_indels.vcf 
-python database_operations_variantions.py outputs/GRCh38_False_indels.vcf 
-python database_operations_variantions.py outputs/GRCh38_True_indels.vcf 
+python main.py input/GRCh37.sam --pseudo True --db input/blastdb/GRCh37
+python database_operations_variantions.py output/VCFs/GRCh37_True_indels.vcf 
+
+python main.py input/GRCh37.sam --pseudo False --db input/blastdb/GRCh37
+python database_operations_variantions.py output/VCFs/GRCh37_False_indels.vcf 
+
+python main.py input/GRCh38.sam --pseudo True --db input/blastdb/GRCh38
+python database_operations_variantions.py output/VCFs/GRCh38_True_indels.vcf 
+
+python main.py input/GRCh38.sam --pseudo False --db input/blastdb/GRCh38
+python database_operations_variantions.py output/VCFs/GRCh38_False_indels.vcf  
+
+

@@ -165,11 +165,12 @@ def str2bool(v):
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
-    parser.add_argument('db', type=str, help="Path to the BLAST database")
+    parser.add_argument('--db', type=str, help="Path to the BLAST database (not required if --pseudo is True)")
     parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Provides or not the reference in the PseudoVCF")
 
     args = parser.parse_args()
     pseudo = args.pseudo
+
     # Check if the file has a .sam extension
     if not args.sam_file.lower().endswith('.sam'):
         print("Error: The provided file does not have a .sam extension.")
@@ -180,9 +181,14 @@ def main():
         print("Error: The provided file does not exist.")
         return
     
-    # Create the "outputs" directory if it doesn't exist
-    output_dir = "outputs_vcf"
-    os.makedirs(output_dir, exist_ok=True)
+    # Ensure db argument is provided if pseudo is False
+    if not pseudo and not args.db:
+        print("Error: The --db argument is required unless --pseudo is set to True.")
+        return
+    
+    output_dir = "output"
+    vcfs_dir = os.path.join(output_dir, "VCFs")
+    os.makedirs(vcfs_dir, exist_ok=True)
 
     # Parse the SAM file
     indels_obj, missing_sequences = parse_sam(args.sam_file, args.db, pseudo)

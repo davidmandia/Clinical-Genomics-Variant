@@ -1,4 +1,5 @@
 import sys
+import os
 
 # Check if the requests module is installed
 try:
@@ -8,9 +9,13 @@ except ImportError:
     print("Please install it using 'pip install requests' and then run this script again.")
     sys.exit(1)
 
+# Ensure the data directory exists
+data_directory = 'input'
+os.makedirs(data_directory, exist_ok=True)
+
 # Define the public URL of GRch 38 S3 file
 public_url = 'https://rp2clinicalgenomicsdavidmandia.s3.amazonaws.com/output_GCF_000001405.40-RS_2023_03_knownrefseq_alns.sam'
-local_file_name = 'GRCh38.sam'
+local_file_name = os.path.join(data_directory, 'GRCh38.sam')
 
 # Download the file
 response = requests.get(public_url)
@@ -25,7 +30,7 @@ else:
 
 # Define the public URL of your GRCh37 S3 file
 public_url_2 = 'https://rp2clinicalgenomicsdavidmandia.s3.amazonaws.com/outputGCF_000001405.25_GRCh37.p13_knownrefseq_alns.sam'
-local_file_name_2 = 'GRCh37.sam'
+local_file_name_2 = os.path.join(data_directory, 'GRCh37.sam')
 
 # Download the file
 response_2 = requests.get(public_url_2)

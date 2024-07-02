@@ -3,7 +3,6 @@ import re
 import argparse
 import os
 import subprocess
-import time 
 
 # Global variable to store cached sequences
 accession_cache = {}
@@ -11,14 +10,14 @@ accession_cache = {}
 # Function to fetch the reference genome sequence using BLAST database
 def get_sequence_blast_db(db, accession, start=None, end=None):
     global accession_cache
-    
+
     # Check if the accession sequence is already cached
     if accession in accession_cache:
         full_sequence = accession_cache[accession]
     else:
         # Construct the blastdbcmd command to fetch the full sequence for the accession
         cmd = ["blastdbcmd", "-db", db, "-entry", accession]
-        
+
         try:
             # Execute the command and fetch the sequence
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -30,7 +29,8 @@ def get_sequence_blast_db(db, accession, start=None, end=None):
     # If start and end are specified, extract the precise region
     if start is not None and end is not None:
         try:
-            sequence = full_sequence[start-1:end]  # Adjust for 0-based indexing
+            #Full Sequence is a String so python 0_based index 
+            sequence = full_sequence[start:end+1]  
             return sequence
         except IndexError:
             raise Exception(f"Invalid range: {start}-{end} is out of bounds for accession {accession}")
@@ -43,21 +43,22 @@ def identify_short_indels(cigar_string):
     short_indels = []
     genomic_position = 0
     transcriptomic_position = 0
-    
+
     for length, op in re.findall(cigar_pattern, cigar_string):
         length = int(length)
-        
+
         if op in ['I', 'D', 'N']:
             if length < 3:
-                short_indels.append((op, length, genomic_position, transcriptomic_position, cigar_string))
-        
+                print("indels", (op, length, genomic_position, transcriptomic_position) )
+                short_indels.append((op, length, genomic_position, transcriptomic_position))
+
         # Update the transcriptomic position
         if op in 'MIS=X':
             transcriptomic_position += length
         # Update the genomic position for match/mismatch
         if op in 'M=XDN':
             genomic_position += length
-    
+
     return short_indels
 
 # Function to extract chromosome number from the reference genome identifier
@@ -68,10 +69,10 @@ def extract_chromosome_number(genome_ref):
     return genome_ref
 
 # Function to parse SAM file and format indels for VCF
-def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the actual reference sequence 
+def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the actual reference sequence
     indels = []
     missing_sequences = []
-    
+
     try:
         with open(file_path, 'r') as file:
             for line in file:
@@ -84,38 +85,55 @@ def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the act
                 genome_ref = fields[2]
                 chrom = extract_chromosome_number(genome_ref)
                 pos = int(fields[3])
-                cigar = fields[5]
-                cigar_indels = identify_short_indels(cigar)
-                
+                cigar_string = fields[5]
+                cigar_indels = identify_short_indels(cigar_string)
+
                 if len(cigar_indels) > 0:
                     for cigar_indel in cigar_indels:
-                        op, length, genomic_pos_offset, transcriptomic_pos_offset, cigar_string = cigar_indel
-                        genomic_pos_0_based = pos + genomic_pos_offset
-                        # 1-index based 
-                        genomic_pos = genomic_pos_0_based -1
+                        print(cigar_indel)
+                        op, length, genomic_pos_offset, transcriptomic_pos_offset = cigar_indel
+                        # -2 because 1 for the staring position in the sam file + genomi position and the other 0_indexing 
+                        genomic_pos_0_based = pos + genomic_pos_offset - 2  # 0-based position
                         transcript_sequence = fields[9]
+                        transcriptomic_pos_offset_0_based = transcriptomic_pos_offset - 1
 
                         try:
                             if pseudo:
                                 if op == 'D':
-                                    ref_seq = transcript_sequence[transcriptomic_pos_offset - 1] + "N" * length
-                                    alt_seq = transcript_sequence[transcriptomic_pos_offset - 1]
+                                    ref_seq = transcript_sequence[transcriptomic_pos_offset_0_based] + "N" * length
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset_0_based]
+                                    
                                 elif op == 'I':
                                     ref_seq = "N"
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset - 1:transcriptomic_pos_offset + length - 1]
-                            else:
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset_0_based:transcriptomic_pos_offset_0_based + length]
+                            elif pseudo == False:
                                 # Fetch reference sequence using cached or direct BLAST DB query
                                 if op == 'D':
-                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos + length)
-                                    alt_seq = transcript_sequence[transcriptomic_pos_offset - 1]  # Deletion
-                                elif op == 'I':
-                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos-1, genomic_pos-1)
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset - 1:transcriptomic_pos_offset + length]
+                                    print("deletion")
+                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos_0_based, genomic_pos_0_based + length)
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset_0_based]  # Deletion, alt_seq should be empty or a placeholder
 
-               
+                                    # # Append indel record to the list
+                                    # indels.append({
+                                    #     'CHROM': chrom,
+                                    #     'POS': genomic_pos_0_based + 1,  # Convert to 1-based position for VCF
+                                    #     'ID': '.',
+                                    #     'REF': ref_seq,
+                                    #     'ALT': alt_seq,
+                                    #     'QUAL': 99,
+                                    #     'FILTER': 'PASS',
+                                    #     'INFO': f'DP=100;LEN={length};TYPE=DEL;TRANSCRIPT={read_id};TRANSCRIPT_POS={transcriptomic_pos_offset};CIGAR:{cigar_string};GENOME_REF={genome_ref}'
+                                    # })
+   
+                                elif op == 'I':
+                                    print("insertion")
+                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos_0_based, genomic_pos_0_based)  # Fetch reference sequence
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset_0_based:transcriptomic_pos_offset_0_based + length + 1 ]  # (python slicing)
+
+                            # Append indel record to the list
                             indels.append({
                                 'CHROM': chrom,
-                                'POS': genomic_pos,
+                                'POS': genomic_pos_0_based + 1,  # Convert to 1-based position for VCF
                                 'ID': '.',
                                 'REF': ref_seq,
                                 'ALT': alt_seq,
@@ -123,12 +141,13 @@ def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the act
                                 'FILTER': 'PASS',
                                 'INFO': f'DP=100;LEN={length};TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT={read_id};TRANSCRIPT_POS={transcriptomic_pos_offset};CIGAR:{cigar_string};GENOME_REF={genome_ref}'
                             })
+
                         except Exception as e:
                             missing_sequences.append({
                                 'TRANSCRIPT': read_id,
                                 'GENOME_REF': genome_ref,
                                 'TRANSCRIPT_POS': transcriptomic_pos_offset,
-                                'GENOME_POS': genomic_pos,
+                                'GENOME_POS': genomic_pos_0_based,
                                 'OP': op,
                                 'LENGTH': length,
                                 'CIGAR': cigar_string
@@ -140,14 +159,13 @@ def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the act
     except Exception as e:
         print(f"Error reading SAM file: {e}")
         return [], []
-
 # Function to write indels to a VCF file
 def write_to_vcf(indels, output_file):
     with open(output_file, 'w') as vcf:
         vcf.write("##fileformat=VCFv4.2\n")
         vcf.write("##source=myVariantCaller\n")
         vcf.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
-        
+
         for indel in indels:
             vcf.write(f"{indel['CHROM']}\t{indel['POS']}\t{indel['ID']}\t{indel['REF']}\t{indel['ALT']}\t{indel['QUAL']}\t{indel['FILTER']}\t{indel['INFO']}\n")
 
@@ -155,7 +173,7 @@ def write_to_vcf(indels, output_file):
 def write_missing_sequences(missing_sequences, output_file):
     with open(output_file, 'w') as txt:
         txt.write("TRANSCRIPT\tGENOME_REF\tTRANSCRIPT_POS\tGENOME_POS\tOP\tLENGTH\tCIGAR\n")
-        
+
         for seq in missing_sequences:
             txt.write(f"{seq['TRANSCRIPT']}\t{seq['GENOME_REF']}\t{seq['TRANSCRIPT_POS']}\t{seq['GENOME_POS']}\t{seq['OP']}\t{seq['LENGTH']}\t{seq['CIGAR']}\n")
 
@@ -174,7 +192,7 @@ def main():
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
     parser.add_argument('--db', type=str, help="Path to the BLAST database")
     parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Generate pseudo VCF")
-    
+
     args = parser.parse_args()
     pseudo = args.pseudo
 
@@ -182,29 +200,29 @@ def main():
     if not args.sam_file.lower().endswith('.sam'):
         print("Error: The provided file does not have a .sam extension.")
         return
-    
+
     # Check if the file exists
     if not os.path.isfile(args.sam_file):
         print("Error: The provided file does not exist.")
         return
-    
+
     # Ensure db argument is provided if pseudo is False
     if not pseudo and not args.db:
         print("Error: The --db argument is required unless --pseudo is set to True.")
         return
-    
+
     output_dir = "output"
     vcfs_dir = os.path.join(output_dir, "VCFs")
     os.makedirs(vcfs_dir, exist_ok=True)
 
     # Parse the SAM file
     indels_obj, missing_sequences = parse_sam(args.sam_file, args.db, pseudo)
-    
+
     # Write indels to a VCF file
     output_file_name_indels_vcf = os.path.join(vcfs_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_{pseudo}_indels.vcf")
     write_to_vcf(indels_obj, output_file_name_indels_vcf)
     print(f"VCF file created: {output_file_name_indels_vcf}")
-    
+
     # If there are missing sequences, write them to a text file
     if missing_sequences:
         output_file_name_missing_txt = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_missing_sequences.txt")

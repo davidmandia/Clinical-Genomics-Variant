@@ -3,23 +3,39 @@ import re
 import argparse
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time 
+
+# Global variable to store cached sequences
+accession_cache = {}
 
 # Function to fetch the reference genome sequence using BLAST database
 def get_sequence_blast_db(db, accession, start=None, end=None):
-    # Construct the blastdbcmd command
-    cmd = ["blastdbcmd", "-db", db, "-entry", accession]
+    global accession_cache
     
-    if start and end:
-        cmd.extend(["-range", f"{start}-{end}"])
-    
-    try:
-        # Execute the command and fetch the sequence
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        sequence = "".join(result.stdout.split("\n")[1:])  # Skip the first line which is the header
-        return sequence
-    except subprocess.CalledProcessError as e:
-        raise Exception(f"Error fetching reference sequence from BLAST DB: {e}")
+    # Check if the accession sequence is already cached
+    if accession in accession_cache:
+        full_sequence = accession_cache[accession]
+    else:
+        # Construct the blastdbcmd command to fetch the full sequence for the accession
+        cmd = ["blastdbcmd", "-db", db, "-entry", accession]
+        
+        try:
+            # Execute the command and fetch the sequence
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            full_sequence = "".join(result.stdout.split("\n")[1:])  # Skip the first line which is the header
+            accession_cache[accession] = full_sequence  # Cache the full sequence
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Error fetching reference sequence from BLAST DB: {e}")
+
+    # If start and end are specified, extract the precise region
+    if start is not None and end is not None:
+        try:
+            sequence = full_sequence[start-1:end]  # Adjust for 0-based indexing
+            return sequence
+        except IndexError:
+            raise Exception(f"Invalid range: {start}-{end} is out of bounds for accession {accession}")
+    else:
+        return full_sequence
 
 # Function to identify short indels and provide data formatted for VCF
 def identify_short_indels(cigar_string):
@@ -74,48 +90,38 @@ def parse_sam(file_path, db, pseudo=False): # If pseudo == False we want the act
                 if len(cigar_indels) > 0:
                     for cigar_indel in cigar_indels:
                         op, length, genomic_pos_offset, transcriptomic_pos_offset, cigar_string = cigar_indel
-                        genomic_pos = pos + genomic_pos_offset
+                        genomic_pos_0_based = pos + genomic_pos_offset
+                        # 1-index based 
+                        genomic_pos = genomic_pos_0_based -1
                         transcript_sequence = fields[9]
 
-                        try: # Will not run API call if pseudo is set to True - generate Pseudo VCF
-                            if pseudo == True:
+                        try:
+                            if pseudo:
                                 if op == 'D':
-                                    ref_seq = "N"+"N"*length
-                                    alt_seq = transcript_sequence[transcriptomic_pos_offset -1]
+                                    ref_seq = transcript_sequence[transcriptomic_pos_offset - 1] + "N" * length
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset - 1]
                                 elif op == 'I':
                                     ref_seq = "N"
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
-                            
-                            elif pseudo == False: # Will use BLAST DB to fetch the reference sequence
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset - 1:transcriptomic_pos_offset + length - 1]
+                            else:
+                                # Fetch reference sequence using cached or direct BLAST DB query
                                 if op == 'D':
                                     ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos + length)
-                                    alt_seq = ref_seq[0]  # Deletion
+                                    alt_seq = transcript_sequence[transcriptomic_pos_offset - 1]  # Deletion
                                 elif op == 'I':
-                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos)
-                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
+                                    ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos-1, genomic_pos-1)
+                                    alt_seq = ref_seq + transcript_sequence[transcriptomic_pos_offset - 1:transcriptomic_pos_offset + length]
 
-                                # Verify the sequences
-                                if op == 'D':
-                                    genomic_ref_check = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos + length)
-                                    if ref_seq != genomic_ref_check:
-                                        print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
-                                elif op == 'I':
-                                    genomic_ref_check = get_sequence_blast_db(db, genome_ref, genomic_pos, genomic_pos)
-                                    transcript_alt_check = transcript_sequence[transcriptomic_pos_offset-1:transcriptomic_pos_offset + length -1]
-                                    if ref_seq != genomic_ref_check:
-                                        print(f"Error: Reference sequence does not match for {genome_ref} at position {genomic_pos}")
-                                    if alt_seq[1:] != transcript_alt_check:
-                                        print(f"Error: ALT sequence does not match transcript sequence for {read_id} at transcript position {transcriptomic_pos_offset}")
-                                
+               
                             indels.append({
-                                'CHROM': chrom,  # Use extracted chromosome number
+                                'CHROM': chrom,
                                 'POS': genomic_pos,
                                 'ID': '.',
                                 'REF': ref_seq,
                                 'ALT': alt_seq,
                                 'QUAL': 99,
                                 'FILTER': 'PASS',
-                                'INFO': f'DP=100;LEN= {length} ;TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ;CIGAR: {cigar_string} ;GENOME_REF= {genome_ref}'
+                                'INFO': f'DP=100;LEN={length};TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT={read_id};TRANSCRIPT_POS={transcriptomic_pos_offset};CIGAR:{cigar_string};GENOME_REF={genome_ref}'
                             })
                         except Exception as e:
                             missing_sequences.append({
@@ -155,7 +161,7 @@ def write_missing_sequences(missing_sequences, output_file):
 
 def str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
@@ -163,25 +169,12 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-def fetch_sequences_concurrently(db, queries):
-    results = {}
-    with ThreadPoolExecutor() as executor:
-        futures = {executor.submit(get_sequence_blast_db, db, q[0], q[1], q[2]): q for q in queries}
-        for future in as_completed(futures):
-            query = futures[future]
-            try:
-                result = future.result()
-                results[query] = result
-            except Exception as e:
-                print(f"Error fetching sequence for {query}: {e}")
-    return results
-
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
-    parser.add_argument('--db', type=str, help="Path to the BLAST database (not required if --pseudo is True)")
-    parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Provides or not the reference in the PseudoVCF")
-
+    parser.add_argument('--db', type=str, help="Path to the BLAST database")
+    parser.add_argument('--pseudo', type=str2bool, nargs='?', const=True, default=False, help="Generate pseudo VCF")
+    
     args = parser.parse_args()
     pseudo = args.pseudo
 

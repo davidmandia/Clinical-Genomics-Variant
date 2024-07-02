@@ -60,9 +60,8 @@ def main():
     os.makedirs(dbs_dir, exist_ok=True)
 
 
-    db_folder = 'output_databases'
-    os.makedirs(db_folder, exist_ok=True)
-    db_name = os.path.join(db_folder, f'{vcf_name}_variant.db')
+
+    db_name = os.path.join(dbs_dir, f'{vcf_name}_variant.db')
 
     create_database(db_name)
     insert_data_from_vcf(vcf_file, db_name)

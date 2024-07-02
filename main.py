@@ -3,6 +3,7 @@ import re
 import argparse
 import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Function to fetch the reference genome sequence using BLAST database
 def get_sequence_blast_db(db, accession, start=None, end=None):
@@ -162,6 +163,19 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+def fetch_sequences_concurrently(db, queries):
+    results = {}
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(get_sequence_blast_db, db, q[0], q[1], q[2]): q for q in queries}
+        for future in as_completed(futures):
+            query = futures[future]
+            try:
+                result = future.result()
+                results[query] = result
+            except Exception as e:
+                print(f"Error fetching sequence for {query}: {e}")
+    return results
+
 def main():
     parser = argparse.ArgumentParser(description="Process a SAM file to identify short indels and mismatches.")
     parser.add_argument('sam_file', type=str, help="Path to the SAM file")
@@ -194,7 +208,7 @@ def main():
     indels_obj, missing_sequences = parse_sam(args.sam_file, args.db, pseudo)
     
     # Write indels to a VCF file
-    output_file_name_indels_vcf = os.path.join(output_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_{pseudo}_indels.vcf")
+    output_file_name_indels_vcf = os.path.join(vcfs_dir, f"{os.path.splitext(os.path.basename(args.sam_file))[0]}_{pseudo}_indels.vcf")
     write_to_vcf(indels_obj, output_file_name_indels_vcf)
     print(f"VCF file created: {output_file_name_indels_vcf}")
     

@@ -1,65 +1,133 @@
+# pip install requests
 import requests
-import argparse
-import json
+import time
 
-#https://github.com/aws-samples/aws-genomics-datalake/blob/main/1000Genomes.ipynb
-#https://gnomad.broadinstitute.org/variant/1-55051215-G-GA?dataset=gnomad_r4
-#https://gnomad.broadinstitute.org/downloads#v4-resources
-#https://registry.opendata.aws/broad-gnomad/ 
-#https://gnomad.broadinstitute.org/news/2023-11-gnomad-v4-0/
-#https://broadinstitute.github.io/gnomad_methods/api_reference/utils/vep.html#gnomad.utils.vep.CURRENT_VEP_VERSION
-#https://rest.ensembl.org/#VEP
-#https://rest.ensembl.org/documentation/info/vep_hgvs_get
+# GraphQL endpoint
+url = "https://gnomad.broadinstitute.org/api"
 
-# Function to fetch gnomAD data for a variant
-def fetch_gnomad_data(chrom, pos, ref, alt):
-    url = f"https://gnomad.broadinstitute.org/api/v3/variant/{chrom}-{pos}-{ref}-{alt}"
-    headers = {
-        "Content-Type": "application/json"
+# The GraphQL query template
+query = """
+query GnomadVariant($variantId: String!, $datasetId: DatasetId!) {
+  variant(variantId: $variantId, dataset: $datasetId) {
+    variant_id
+    reference_genome
+    chrom
+    pos
+    ref
+    alt
+    colocated_variants
+    coverage {
+      exome {
+        mean
+        over_20
+      }
+      genome {
+        mean
+        over_20
+      }
     }
+    exome {
+      ac
+      an
+      ac_hemi
+      ac_hom
+      filters
+      populations {
+        id
+        ac
+        an
+        ac_hemi
+        ac_hom
+      }
+    }
+    genome {
+      ac
+      an
+      ac_hemi
+      ac_hom
+      filters
+      populations {
+        id
+        ac
+        an
+        ac_hemi
+        ac_hom
+      }
+    }
+    flags
+    lof_curations {
+      gene_id
+      gene_symbol
+      verdict
+      flags
+      project
+    }
+    rsids
+    transcript_consequences {
+      domains
+      gene_id
+      gene_version
+      gene_symbol
+      hgvs
+      hgvsc
+      hgvsp
+      is_canonical
+      is_mane_select
+      is_mane_select_version
+      lof
+      lof_flags
+      lof_filter
+      major_consequence
+      polyphen_prediction
+      sift_prediction
+      transcript_id
+      transcript_version
+    }
+    in_silico_predictors {
+      id
+      value
+      flags
+    }
+  }
+}
+"""
 
+# Function to query for a single variant
+def query_variant(variant_id, dataset_id="gnomad_r4", retries=5):
+    # Query variables
+    variables = {"variantId": variant_id, "datasetId": dataset_id}
+
+    # Retry mechanism
+    for attempt in range(retries):
+        try:
+            # HTTP POST request
+            response = requests.post(url, json={"query": query, "variables": variables})
+            if response.status_code == 200:
+                return response.json()  # Returns the JSON response
+            else:
+                raise Exception(
+                    f"Query failed to run by returning code of {response.status_code}. {response.text}"
+                )
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            time.sleep(5)  # Wait for 5 seconds before retrying
+
+    raise Exception("Max retries exceeded")
+
+# List of variants to query
+variants = ["1-55052746-GT-G", "1-55058620-TG-T"]  # Add your variants here
+
+# Results list
+results = []
+
+# Loop through each variant and query
+for variant in variants:
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching gnomAD data for variant {chrom}-{pos}-{ref}-{alt}: {e}")
-        return None
+        result = query_variant(variant)
+        results.append(result)
+        time.sleep(6)  # Sleep to respect the 10 queries per minute limit
+    except Exception as e:
+        print(f"Failed to retrieve data for variant {variant}: {e}")
 
-# Function to parse the VCF file (example function, replace with your actual parsing logic)
-def parse_vcf(file_path):
-    # Example placeholder function, replace with actual parsing logic
-    variants = [
-        {"CHROM": "1", "POS": 136889, "REF": "GG", "ALT": "G"},
-        {"CHROM": "1", "POS": 1052530, "REF": "C", "ALT": "CTG"}
-        # Add more variants as needed
-    ]
-    return variants
-
-# Main function to process VCF file and fetch gnomAD data
-def main():
-    parser = argparse.ArgumentParser(description="Process VCF file and fetch gnomAD data.")
-    parser.add_argument('vcf_file', type=str, help="Path to the VCF file")
-
-    args = parser.parse_args()
-
-    # Parse the VCF file
-    variants = parse_vcf(args.vcf_file)
-
-    # Fetch gnomAD data for each variant and print results
-    for variant in variants:
-        chrom = variant['CHROM']
-        pos = variant['POS']
-        ref = variant['REF']
-        alt = variant['ALT']
-
-        print(f"Fetching gnomAD data for variant {chrom}-{pos}-{ref}-{alt}...")
-        gnomad_data = fetch_gnomad_data(chrom, pos, ref, alt)
-
-        if gnomad_data:
-            print(json.dumps(gnomad_data, indent=2))  # Print gnomAD data
-
-        print()  # Add a newline for clarity between variants
-
-if __name__ == "__main__":
-    main()
+# results now contains the response for each variant
+print(results)

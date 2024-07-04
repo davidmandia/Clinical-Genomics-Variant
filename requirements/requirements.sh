@@ -49,3 +49,22 @@ perl INSTALL.pl
 # Run VEP
 ./vep -i examples/homo_sapiens_GRCh38.vcf --cache
 
+## HAIL  -- REQUIRES CLOUD COMPUTING
+
+# sudo apt-get install -y openjdk-11-jre-headless g++ python3.9 python3-pip libopenblas-base liblapack3
+# python -m pip install hail
+
+# # Update package list and install dependencies
+# sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
+
+# # Add the Cloud SDK distribution URI as a package source
+# echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+# # Import the Google Cloud public key
+# curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+# # Update and install the Google Cloud SDK
+# sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+
+cpan BioPerl
+cpan DBI

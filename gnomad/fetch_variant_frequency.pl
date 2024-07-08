@@ -5,13 +5,23 @@ use Bio::EnsEMBL::Registry;
 
 # Connect to Ensembl API
 my $registry = 'Bio::EnsEMBL::Registry';
-$registry->load_registry_from_db(
-    -host => 'ensembldb.ensembl.org',  # Replace with your Ensembl database host
-    -user => 'anonymous',              # Anonymous access is common for public databases
-);
+eval {
+    $registry->load_registry_from_db(
+        -host => 'ensembldb.ensembl.org',  # Ensembl public database host
+        -user => 'anonymous',              # Anonymous access is common for public databases
+    );
+};
+if ($@) {
+    die "Error connecting to Ensembl database: $@\n";
+}
 
 # Get VariationAdaptor
 my $va = $registry->get_adaptor('human', 'variation', 'variation');
+
+# Check if adaptor was successfully retrieved
+if (!defined $va) {
+    die "Error: Unable to get variation adaptor.\n";
+}
 
 # Define variant details (replace with your variant's chromosome, position, ref, alt)
 my $chromosome = '1';
@@ -23,17 +33,18 @@ my $alternative_allele = 'G';
 my $variation = $va->fetch_by_location(
     $chromosome,
     $position,
-    $position,
     $reference_allele,
     $alternative_allele
 );
 
 # Check if variation was found
-if ($variation) {
-    # Iterate over alleles and fetch frequency
-    foreach my $allele (@{$variation->get_all_Alleles}) {
-        my $allele_frequency = $allele->frequency;
-        print "Allele Frequency: $allele_frequency\n";
+if (defined $variation) {
+    # Fetch all population-genotype frequencies
+    my $allele = $variation->get_all_Alleles();
+    foreach my $pf (@{$variation->get_all_PopulationGenotypeFeatures}) {
+        my $population = $pf->population->name;
+        my $frequency = $pf->frequency;
+        print "Population: $population, Frequency: $frequency\n";
     }
 } else {
     print "Variant not found at specified location.\n";

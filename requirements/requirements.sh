@@ -68,3 +68,8 @@ perl INSTALL.pl
 
 cpan BioPerl
 cpan DBI
+
+
+## Ensembl api 
+
+pip install pysam hgvs

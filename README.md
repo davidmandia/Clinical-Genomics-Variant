@@ -7,9 +7,6 @@ I will update the README shortly, but I have changed the script and the argument
 
 This Python script processes a SAM file to identify short indels (insertions and deletions) in the alignment data. The script identifies indels with lengths less than 3 and outputs the results to a text file, including the position of each indel.
 
-
-If Mismatches are present, they will be present in the mismatch text file in output
-
 ## Requirements
 
 - Python 3.6 or higher

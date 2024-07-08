@@ -131,7 +131,7 @@ def parse_sam(file_path, db, pseudo=False, sleep_time=1):  # If pseudo == False 
                                 'ALT': alt_seq,
                                 'QUAL': 99,
                                 'FILTER': 'PASS',
-                                'INFO': f'DP=100;LEN={length};TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ;CIGAR: {cigar_string} ;GENOME_REF= {genome_ref} '
+                                'INFO': f'DP=100;LEN={length};TYPE={"DEL" if op == "D" else "INS"};TRANSCRIPT= {read_id} ;TRANSCRIPT_POS= {transcriptomic_pos_offset} ;GENOME_REF= {genome_ref} ' # for testing i have added the CIGAR on the output INFO "CIGAR: {cigar_string}" 
                             })
 
                         except Exception as e:
@@ -155,9 +155,20 @@ def parse_sam(file_path, db, pseudo=False, sleep_time=1):  # If pseudo == False 
 # Function to write indels to a VCF file
 def write_to_vcf(indels, output_file):
     with open(output_file, 'w') as vcf:
+        
+        #write VCF header 
         vcf.write("##fileformat=VCFv4.2\n")
         vcf.write("##source=myVariantCaller\n")
         vcf.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+        vcf.write('##contig=<ID=1>\n')
+        vcf.write('##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n')
+        vcf.write('##INFO=<ID=LEN,Number=1,Type=Integer,Description="Variant Length">\n')
+        vcf.write('##INFO=<ID=TYPE,Number=1,Type=String,Description="Variant Type">\n')
+        vcf.write('##INFO=<ID=TRANSCRIPT,Number=1,Type=String,Description="Transcript ID">\n')
+        vcf.write('##INFO=<ID=TRANSCRIPT_POS,Number=1,Type=Integer,Description="Position in Transcript">\n')
+        vcf.write('##INFO=<ID=CIGAR,Number=1,Type=String,Description="CIGAR string">\n')
+        vcf.write('##INFO=<ID=GENOME_REF,Number=1,Type=String,Description="Genome Reference">\n')
+        
 
         for indel in indels:
             vcf.write(f"{indel['CHROM']}\t{indel['POS']}\t{indel['ID']}\t{indel['REF']}\t{indel['ALT']}\t{indel['QUAL']}\t{indel['FILTER']}\t{indel['INFO']}\n")

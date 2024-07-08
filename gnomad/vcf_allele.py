@@ -3,6 +3,9 @@ import requests
 import csv
 from pysam import VariantFile
 
+## Test with the batch results. See if you obtain something different from the previous results.
+
+
 def get_vep_data(chrom, pos, ref, alt, strand=1):
     """Fetch data from Ensembl VEP REST API using VCF format"""
     server = "https://rest.ensembl.org"

@@ -9,7 +9,7 @@ def get_vep_data(chrom, pos, ref, alt):
     server = "https://rest.ensembl.org"
     ext = "/vep/human/region"
     chrom = chrom.replace('chr', '')
-    variant = f"{chrom}:{pos}:{ref}:{alt}"
+    variant = f"{chrom} {pos} . {ref} {alt} . . ."
     
     headers = {
         "Content-Type": "application/json",
@@ -21,8 +21,7 @@ def get_vep_data(chrom, pos, ref, alt):
         "allele_number": True,
         "regulatory": True,
         "canonical": True,
-        "hgvs": True,
-        "transcripts": True
+        "hgvs": True
     }
     response = requests.post(server + ext, headers=headers, json=data)
     if response.status_code != 200:
@@ -30,37 +29,31 @@ def get_vep_data(chrom, pos, ref, alt):
         return None
     return response.json()
 
+
+# return frequencies, hgvs
 def parse_vep_data(data):
     """Parse VEP API response for allele frequencies, SIFT score, gene, and transcript"""
     if not data or len(data) == 0:
         return {}, None, None, None, None
-    
+    #print("data",data)
     variant_data = data[0]
+    #print("keys",variant_data.keys())
     frequencies = {}
-    sift_score = None
-    gene = None
-    transcript = None
+   # sift_score = None
+   # gene = None
+   # transcript = None
     
-    if 'colocated_variants' in variant_data:
-        for cv in variant_data['colocated_variants']:
-            if 'frequencies' in cv:
-                for pop, freq in cv['frequencies'].items():
-                    if pop.startswith('gnomad'):
-                        frequencies[pop] = freq
-    
-    if 'transcript_consequences' in variant_data:
-        for tc in variant_data['transcript_consequences']:
-            if 'sift_score' in tc:
-                sift_score = tc['sift_score']
-            if 'gene_symbol' in tc:
-                gene = tc['gene_symbol']
-            if 'transcript_id' in tc:
-                transcript = tc['transcript_id']
-            if sift_score and gene and transcript:
-                break
-    
+    if 'colocated_variants' in variant_data.keys():
+        if 'frequencies' in variant_data['colocated_variants'][0].keys():
+            gnomad_fre = next(iter(variant_data["colocated_variants"][0]["frequencies"].values()))
+         #   print("gnomad", type(gnomad_fre), gnomad_fre)
+            for pop, freq in gnomad_fre.items():
+                #print(f"{pop}: {freq}")
+                frequencies[pop] = freq
+                
+ 
     hgvs = variant_data.get('id', '')
-    return frequencies, sift_score, hgvs, gene, transcript
+    return frequencies, hgvs
 
 def create_database(db_name):
     conn = sqlite3.connect(db_name)
@@ -121,9 +114,11 @@ def process_vcf_and_insert(input_file, db_name):
             print(f"Processing variant: {chrom}:{pos}:{ref}>{alt}")
             
             vep_data = get_vep_data(chrom, pos, ref, alt)
-            frequencies, sift_score, hgvs, gene, transcript = parse_vep_data(vep_data)
+            frequencies, hgvs = parse_vep_data(vep_data)
+            #print("frequencies",frequencies)
             
             info_dict = parse_info(info)
+            #print("info_dict",info_dict)
             
             # Extract operation (TYPE and LEN)
             variant_type = info_dict.get('TYPE', '')
@@ -138,12 +133,13 @@ def process_vcf_and_insert(input_file, db_name):
             genomic_ref = info_dict.get('GENOME_REF', '')
             
             gnomad_fields = [
-                'gnomad', 'gnomad_eas', 'gnomad_nfe', 'gnomad_fin',
-                'gnomad_amr', 'gnomad_afr', 'gnomad_asj', 'gnomad_oth',
-                'gnomad_sas', 'gnomad_mid', 'gnomad_ami'
+                'gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin',
+                'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth',
+                'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami'
             ]
             
             gnomad_values = [frequencies.get(field) for field in gnomad_fields]
+            print("gnomad_values",gnomad_values)
             
             cursor.execute('''
                 INSERT INTO variants (
@@ -157,7 +153,7 @@ def process_vcf_and_insert(input_file, db_name):
             ''', (
                 chrom, int(pos), id_, ref, alt, float(qual) if qual != '.' else None,
                 filter_, genomic_ref, hgvs, operation, transcript_ref, transcript_pos,
-                gene, transcript, *gnomad_values, sift_score
+                "gene", "transcript", *gnomad_values, "sift_score"
             ))
     
     conn.commit()
@@ -183,7 +179,7 @@ def main():
     
     create_database(db_name)
     process_vcf_and_insert(vcf_file, db_name)
-    print(f'Data from {vcf_file} has been processed and inserted into {db_name}')
+    #print(f'Data from {vcf_file} has been processed and inserted into {db_name}')
 
 if __name__ == '__main__':
     main()

@@ -49,11 +49,15 @@ def parse_vep_data(data):
     print("keys",variant_data.keys())
     #print("variants id",variant_data["colocated_variants"][0]["id"])
     #print("variants keys",variant_data["colocated_variants"][0].keys())
+    #next(iter(outer_object.values()))
     if "colocated_variants" in variant_data.keys():
         print("colocated_variants",variant_data["colocated_variants"][0].keys())
         
         if "frequencies" in variant_data["colocated_variants"][0].keys():
-            print("frequencies",variant_data["colocated_variants"][0]["frequencies"])
+            gnomad_fre = next(iter(variant_data["colocated_variants"][0]["frequencies"].values()))
+            print("gnomad", type(gnomad_fre), gnomad_fre)
+            for pop, freq in gnomad_fre.items():
+                print(f"{pop}: {freq}")
     
     # Extract population frequencies
     frequencies = {}

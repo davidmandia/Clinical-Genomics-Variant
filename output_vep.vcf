@@ -1,6 +1,0 @@
-##fileformat=VCFv4.2
-##FILTER=<ID=PASS,Description="All filters passed">
-##source=myVariantCaller
-##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
-##INFO=<ID=SIFT,Number=A,Type=Float,Description="SIFT score">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO

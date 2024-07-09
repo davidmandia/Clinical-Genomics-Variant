@@ -32,6 +32,7 @@ def get_vep_data(chrom, pos, ref, alt, strand=1):
     }
 
     response = requests.post(server + ext, headers=headers, json=data)
+   # print(response.json())
     
     if response.status_code != 200:
         print(f"Failed to retrieve data for {variant}: {response.status_code}")
@@ -45,6 +46,14 @@ def parse_vep_data(data):
         return None, None, None
     
     variant_data = data[0]
+    print("keys",variant_data.keys())
+    #print("variants id",variant_data["colocated_variants"][0]["id"])
+    #print("variants keys",variant_data["colocated_variants"][0].keys())
+    if "colocated_variants" in variant_data.keys():
+        print("colocated_variants",variant_data["colocated_variants"][0].keys())
+        
+        if "frequencies" in variant_data["colocated_variants"][0].keys():
+            print("frequencies",variant_data["colocated_variants"][0]["frequencies"])
     
     # Extract population frequencies
     frequencies = {}

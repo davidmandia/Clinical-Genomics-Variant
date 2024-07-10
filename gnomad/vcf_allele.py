@@ -44,28 +44,23 @@ def parse_vep_data(data):
     """Parse VEP API response for allele frequencies and SIFT score"""
     if not data or len(data) == 0:
         return None, None, None
-    
+    print("data",data[0])
     variant_data = data[0]
-    print("keys",variant_data.keys())
+    #print("keys",variant_data.keys())
     #print("variants id",variant_data["colocated_variants"][0]["id"])
     #print("variants keys",variant_data["colocated_variants"][0].keys())
     #next(iter(outer_object.values()))
     if "colocated_variants" in variant_data.keys():
-        print("colocated_variants",variant_data["colocated_variants"][0].keys())
+       # print("colocated_variants",variant_data["colocated_variants"][0].keys())
         
         if "frequencies" in variant_data["colocated_variants"][0].keys():
             gnomad_fre = next(iter(variant_data["colocated_variants"][0]["frequencies"].values()))
-            print("gnomad", type(gnomad_fre), gnomad_fre)
+          #  print("gnomad", type(gnomad_fre), gnomad_fre)
             for pop, freq in gnomad_fre.items():
-                print(f"{pop}: {freq}")
+                continue
+             #   print(f"{pop}: {freq}")
     
-    # Extract population frequencies
-    frequencies = {}
-    if 'colocated_variants' in variant_data:
-        for cv in variant_data['colocated_variants']:
-            if 'frequencies' in cv:
-                frequencies = cv['frequencies']
-                break
+    
     
     # Extract SIFT score
     sift_score = None
@@ -77,7 +72,7 @@ def parse_vep_data(data):
     
     # Extract HGVS notation
     hgvs = variant_data.get('id', '')
-    
+    frequencies = {}
     return frequencies, sift_score, hgvs
 
 def process_vcf(input_file, output_file):

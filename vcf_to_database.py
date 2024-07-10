@@ -20,7 +20,8 @@ def get_vep_data(chrom, pos, ref, alt):
         "variant_class": True,
         "allele_number": True,
         "regulatory": True,
-        "canonical": True
+        "canonical": True,
+        "check_existing": True  # This will return info about existing variants
     }
     response = requests.post(server + ext, headers=headers, json=data)
     if response.status_code != 200:
@@ -28,22 +29,27 @@ def get_vep_data(chrom, pos, ref, alt):
         return None
     return response.json()
 
-# return frequencies, genes, consequences
 def parse_vep_data(data):
     """Parse VEP API response for allele frequencies, genes, and consequences"""
     if not data or len(data) == 0:
-        return {}, [], []
+        return {}, [], [], None, None
     
     variant_data = data[0]
+    print("variant_data",variant_data)
     frequencies = {}
     genes = set()
     consequences = set()
+    existing_variant = None
     
-    if 'colocated_variants' in variant_data.keys():
-        if 'frequencies' in variant_data['colocated_variants'][0].keys():
-            gnomad_fre = next(iter(variant_data["colocated_variants"][0]["frequencies"].values()))
-            for pop, freq in gnomad_fre.items():
-                frequencies[pop] = freq
+    if 'colocated_variants' in variant_data:
+        for cv in variant_data['colocated_variants']:
+            if 'id' in cv:
+                existing_variant = cv['id']
+            if 'frequencies' in cv:
+                gnomad_fre = next(iter(cv["frequencies"].values()), {})
+                for pop, freq in gnomad_fre.items():
+                    frequencies[pop] = freq
+
     
     if 'transcript_consequences' in variant_data:
         for tc in variant_data['transcript_consequences']:
@@ -54,7 +60,7 @@ def parse_vep_data(data):
             if 'consequence_terms' in tc:
                 consequences.update(tc['consequence_terms'])
  
-    return frequencies, list(genes), list(consequences)
+    return frequencies, list(genes), list(consequences), existing_variant
 
 def create_database(db_name):
     conn = sqlite3.connect(db_name)
@@ -83,7 +89,8 @@ def create_database(db_name):
             gnomadg_mid REAL,
             gnomadg_ami REAL,
             genes TEXT,
-            consequences TEXT
+            consequences TEXT,
+            existing_variant TEXT
         )
     ''')
     conn.commit()
@@ -112,7 +119,7 @@ def process_vcf_and_insert(input_file, db_name):
             print(f"Processing variant: {chrom}:{pos}:{ref}>{alt}")
             
             vep_data = get_vep_data(chrom, pos, ref, alt)
-            frequencies, genes, consequences = parse_vep_data(vep_data)
+            frequencies, genes, consequences, existing_variant = parse_vep_data(vep_data)
             
             info_dict = parse_info(info)
             
@@ -134,7 +141,7 @@ def process_vcf_and_insert(input_file, db_name):
                 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami'
             ]
             
-            gnomad_values = [frequencies.get(field) for field in gnomad_fields]
+            gnomad_values = [frequencies.get(field, "NA") for field in gnomad_fields]
             print("gnomad_values",gnomad_values)
             
             cursor.execute('''
@@ -143,13 +150,15 @@ def process_vcf_and_insert(input_file, db_name):
                     operation, transcript_ref, transcript_pos,
                     gnomadg, gnomadg_eas, gnomadg_nfe, gnomadg_fin,
                     gnomadg_amr, gnomadg_afr, gnomadg_asj, gnomadg_oth,
-                    gnomadg_sas, gnomadg_mid, gnomadg_ami, genes, consequences
+                    gnomadg_sas, gnomadg_mid, gnomadg_ami, genes, consequences,
+                    existing_variant
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 chrom, int(pos), ref, alt, float(qual) if qual != '.' else None,
                 filter_, genomic_ref, operation, transcript_ref, transcript_pos,
-                *gnomad_values, ','.join(genes), ','.join(consequences)
+                *gnomad_values, ','.join(genes), ','.join(consequences),
+                existing_variant
             ))
     
     conn.commit()

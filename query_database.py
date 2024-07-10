@@ -7,7 +7,7 @@ def query_database(db_path):
 
     # Execute a SELECT * query
     # Select all when gnoma_g is not None
-    cursor.execute("SELECT * FROM variants;")
+    cursor.execute("SELECT * FROM variants LIMIT 30;")
     
 
     # Fetch all rows
@@ -27,7 +27,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "sample_False_indels_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh38_indels_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

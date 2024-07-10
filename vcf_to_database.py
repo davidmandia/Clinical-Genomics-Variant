@@ -20,8 +20,7 @@ def get_vep_data(chrom, pos, ref, alt):
         "variant_class": True,
         "allele_number": True,
         "regulatory": True,
-        "canonical": True,
-        "hgvs": True
+        "canonical": True
     }
     response = requests.post(server + ext, headers=headers, json=data)
     if response.status_code != 200:
@@ -29,31 +28,33 @@ def get_vep_data(chrom, pos, ref, alt):
         return None
     return response.json()
 
-
-# return frequencies, hgvs
+# return frequencies, genes, consequences
 def parse_vep_data(data):
-    """Parse VEP API response for allele frequencies, SIFT score, gene, and transcript"""
+    """Parse VEP API response for allele frequencies, genes, and consequences"""
     if not data or len(data) == 0:
-        return {}, None, None, None, None
-    #print("data",data)
+        return {}, [], []
+    
     variant_data = data[0]
-    #print("keys",variant_data.keys())
     frequencies = {}
-   # sift_score = None
-   # gene = None
-   # transcript = None
+    genes = set()
+    consequences = set()
     
     if 'colocated_variants' in variant_data.keys():
         if 'frequencies' in variant_data['colocated_variants'][0].keys():
             gnomad_fre = next(iter(variant_data["colocated_variants"][0]["frequencies"].values()))
-         #   print("gnomad", type(gnomad_fre), gnomad_fre)
             for pop, freq in gnomad_fre.items():
-                #print(f"{pop}: {freq}")
                 frequencies[pop] = freq
-                
+    
+    if 'transcript_consequences' in variant_data:
+        for tc in variant_data['transcript_consequences']:
+            if 'gene_symbol' in tc:
+                genes.add(tc['gene_symbol'])
+            elif 'gene_id' in tc:
+                genes.add(tc['gene_id'])
+            if 'consequence_terms' in tc:
+                consequences.update(tc['consequence_terms'])
  
-    hgvs = variant_data.get('id', '')
-    return frequencies, hgvs
+    return frequencies, list(genes), list(consequences)
 
 def create_database(db_name):
     conn = sqlite3.connect(db_name)
@@ -62,18 +63,14 @@ def create_database(db_name):
         CREATE TABLE IF NOT EXISTS variants (
             chrom TEXT,
             pos INTEGER,
-            id TEXT,
             ref TEXT,
             alt TEXT,
             qual REAL,
             filter TEXT,
             genomic_ref TEXT,
-            hgvs TEXT,
             operation TEXT,
             transcript_ref TEXT,
             transcript_pos TEXT,
-            gene TEXT,
-            transcript TEXT,
             gnomadg REAL,
             gnomadg_eas REAL,
             gnomadg_nfe REAL,
@@ -85,7 +82,8 @@ def create_database(db_name):
             gnomadg_sas REAL,
             gnomadg_mid REAL,
             gnomadg_ami REAL,
-            sift_score REAL
+            genes TEXT,
+            consequences TEXT
         )
     ''')
     conn.commit()
@@ -109,16 +107,14 @@ def process_vcf_and_insert(input_file, db_name):
                 continue  # Skip header lines
             
             fields = line.strip().split('\t')
-            chrom, pos, id_, ref, alt, qual, filter_, info = fields[:8]
+            chrom, pos, _, ref, alt, qual, filter_, info = fields[:8]
             
             print(f"Processing variant: {chrom}:{pos}:{ref}>{alt}")
             
             vep_data = get_vep_data(chrom, pos, ref, alt)
-            frequencies, hgvs = parse_vep_data(vep_data)
-            #print("frequencies",frequencies)
+            frequencies, genes, consequences = parse_vep_data(vep_data)
             
             info_dict = parse_info(info)
-            #print("info_dict",info_dict)
             
             # Extract operation (TYPE and LEN)
             variant_type = info_dict.get('TYPE', '')
@@ -143,17 +139,17 @@ def process_vcf_and_insert(input_file, db_name):
             
             cursor.execute('''
                 INSERT INTO variants (
-                    chrom, pos, id, ref, alt, qual, filter, genomic_ref, hgvs,
-                    operation, transcript_ref, transcript_pos, gene, transcript,
+                    chrom, pos, ref, alt, qual, filter, genomic_ref,
+                    operation, transcript_ref, transcript_pos,
                     gnomadg, gnomadg_eas, gnomadg_nfe, gnomadg_fin,
                     gnomadg_amr, gnomadg_afr, gnomadg_asj, gnomadg_oth,
-                    gnomadg_sas, gnomadg_mid, gnomadg_ami, sift_score
+                    gnomadg_sas, gnomadg_mid, gnomadg_ami, genes, consequences
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                chrom, int(pos), id_, ref, alt, float(qual) if qual != '.' else None,
-                filter_, genomic_ref, hgvs, operation, transcript_ref, transcript_pos,
-                "gene", "transcript", *gnomad_values, "sift_score"
+                chrom, int(pos), ref, alt, float(qual) if qual != '.' else None,
+                filter_, genomic_ref, operation, transcript_ref, transcript_pos,
+                *gnomad_values, ','.join(genes), ','.join(consequences)
             ))
     
     conn.commit()
@@ -179,7 +175,7 @@ def main():
     
     create_database(db_name)
     process_vcf_and_insert(vcf_file, db_name)
-    #print(f'Data from {vcf_file} has been processed and inserted into {db_name}')
+    print(f'Data from {vcf_file} has been processed and inserted into {db_name}')
 
 if __name__ == '__main__':
     main()

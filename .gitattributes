@@ -2,3 +2,5 @@ path/to/newfile filter=lfs diff=lfs merge=lfs -text
 output/VCF/* filter=lfs diff=lfs merge=lfs -text
 output/VCFs filter=lfs diff=lfs merge=lfs -text
 output/database filter=lfs diff=lfs merge=lfs -text
+output/database/GRCh37_indels_variant.db filter=lfs diff=lfs merge=lfs -text
+output/database/GRCh38_indels_variant.db filter=lfs diff=lfs merge=lfs -text

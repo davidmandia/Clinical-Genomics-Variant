@@ -41,7 +41,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "GRCh38_indels_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh37_indels_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

@@ -5,10 +5,24 @@ def query_database(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    # Count total rows
+    cursor.execute("SELECT COUNT(*) FROM variants")
+    total_rows = cursor.fetchone()[0]
+
+    # Count rows where gnomadg is not "Na"
+    cursor.execute("SELECT COUNT(*) FROM variants WHERE gnomadg != 'Na'")
+    non_na_rows = cursor.fetchone()[0]
+
+    # Calculate percentage
+    percentage = (non_na_rows / total_rows) * 100 if total_rows > 0 else 0
+
+    print(f"Total rows: {total_rows}")
+    print(f"Rows with gnomadg value: {non_na_rows}")
+    print(f"Percentage of rows with gnomadg value: {percentage:.2f}%")
+    print("\n")
+
     # Execute a SELECT * query
-    # Select all when gnoma_g is not None
     cursor.execute("SELECT * FROM variants LIMIT 30;")
-    
 
     # Fetch all rows
     rows = cursor.fetchall()

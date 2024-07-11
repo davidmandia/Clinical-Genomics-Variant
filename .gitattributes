@@ -1,0 +1,4 @@
+path/to/newfile filter=lfs diff=lfs merge=lfs -text
+output/VCF/* filter=lfs diff=lfs merge=lfs -text
+output/VCFs filter=lfs diff=lfs merge=lfs -text
+output/database filter=lfs diff=lfs merge=lfs -text

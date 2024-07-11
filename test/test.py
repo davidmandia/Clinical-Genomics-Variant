@@ -8,7 +8,7 @@ from unittest.mock import patch, mock_open
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import functions from the main script
-from main import (
+from test.sam_to_vcf_testing import (
     get_sequence_blast_db,
     identify_short_indels,
     extract_chromosome_number,

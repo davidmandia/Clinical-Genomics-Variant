@@ -194,7 +194,12 @@ def main():
     
     vcf_data = read_vcf_file(vcf_file)
     
-    server = "https://rest.ensembl.org"
+    ## The APi is different based on the genome assembly used 
+    if assembly == 'GRCh38':
+        server = "https://rest.ensembl.org"
+    elif assembly == 'GRCh37':
+        server = "https://grch37.rest.ensembl.org"
+        
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     
     # Create batches of 200 variants

@@ -75,7 +75,7 @@ def parse_info(info_str):
         if '=' in item:
             key, value = item.split('=', 1)
             info_dict[key] = value
-    print("info_dict", info_dict)
+    #print("info_dict", info_dict)
     return info_dict
 
 def create_database(db_name):
@@ -138,16 +138,20 @@ def process_results_and_insert(results, original_variants, db_name):
         # frequencies = {'af': "Na", 'eas': "Na", 'amr': "Na", 'sas': "Na", 'afr': "Na", 'eur': "Na"}
         
         
+        ## We most likely have the api for assembly 37 
+        if "af" in frequencies.keys():
+            gnomad_fields = ['af', 'eas', 'eur', 'gnomadg_fin', 'amr', 'afr', 'gnomadg_asj', 'gnomadg_oth', 'sas', 'gnomadg_mid', 'gnomadg_ami']
         
-        gnomad_fields = [
-            'gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin',
-            'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth',
-            'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami'
-        ]
-        print("frequencies", frequencies)
+        ## We most lilkely have version 38
+        elif "gnomadg" in frequencies.keys():
+            gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']
+        else:
+            gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']   
+
+        #print("frequencies", frequencies)
         ## Can probabaly add a conditional statement to check if the key is in the dictionary
         ## if not add it with a value of "Na"
-        
+        #print("gnomad_fields", gnomad_fields)
         gnomad_values = [frequencies.get(field, "Na") for field in gnomad_fields]
         
         insert_data.append((

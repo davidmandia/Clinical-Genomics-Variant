@@ -55,6 +55,8 @@ def parse_vep_data(variant_data):
                 gnomad_fre = next(iter(cv["frequencies"].values()), {})
                 for pop, freq in gnomad_fre.items():
                     frequencies[pop] = freq
+                
+                
 
     if 'transcript_consequences' in variant_data:
         for tc in variant_data['transcript_consequences']:
@@ -73,6 +75,7 @@ def parse_info(info_str):
         if '=' in item:
             key, value = item.split('=', 1)
             info_dict[key] = value
+    print("info_dict", info_dict)
     return info_dict
 
 def create_database(db_name):
@@ -126,13 +129,24 @@ def process_results_and_insert(results, original_variants, db_name):
         transcript_ref = info_dict.get('TRANSCRIPT', '')
         transcript_pos = info_dict.get('TRANSCRIPT_POS', '')
         
-        genomic_ref = info_dict.get('GENOME_REF', '')
+        genomic_ref = info_dict.get('GENOME_REF', '')  
+        
+        
+        # in CHG38 the eur gnomadg field is called gnomadg_nfe vs 37 is eur
+        # in CHG38 the average gnomadg vs 37 is af
+        # the rest in Ch38 they have a prefix gnomadg_ vs 37 they don't
+        # frequencies = {'af': "Na", 'eas': "Na", 'amr': "Na", 'sas': "Na", 'afr': "Na", 'eur': "Na"}
+        
+        
         
         gnomad_fields = [
             'gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin',
             'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth',
             'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami'
         ]
+        print("frequencies", frequencies)
+        ## Can probabaly add a conditional statement to check if the key is in the dictionary
+        ## if not add it with a value of "Na"
         
         gnomad_values = [frequencies.get(field, "Na") for field in gnomad_fields]
         

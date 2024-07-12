@@ -1,7 +1,8 @@
-import requests
 import argparse
-import json
+import requests
+import sqlite3
 import time
+import os
 
 def read_vcf(file_path):
     variants = []
@@ -10,83 +11,124 @@ def read_vcf(file_path):
             if line.startswith('#'):
                 continue
             fields = line.strip().split('\t')
-            chrom, pos, _, ref, alt = fields[:5]
-            variants.append(f"{chrom} {pos} {ref} {alt}")
+            chrom, pos, ref, alt = fields[0], fields[1], fields[3], fields[4]
+            variants.append((chrom, pos, ref, alt))
     return variants
 
-def process_variants(variants, server, assembly, sleep_time=1):
+def process_variant(variant, server, headers, sleep_time=1):
+    chrom, pos, ref, alt = variant
     data = {
-        "variants": variants,
-        "variant_class": True,
-        "allele_number": True,
-        "regulatory": True,
-        "canonical": True,
-        "check_existing": True,
-        "assembly": assembly
+        "variants": [f"{chrom} {pos} . {ref} {alt} . . ."],
+        "species": "human",
+        "vcf_string": 1,
+        "canonical": 1,
+        "picks": 1,
+        "variant_class": 1
     }
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    response = requests.post(f"{server}/vep/human/region", headers=headers, json=data)
     
-    time.sleep(sleep_time)  # Sleep to avoid overwhelming the API
+    response = requests.post(f"{server}/vep/human/region", headers=headers, json=data)
+    time.sleep(sleep_time)
     
     if response.status_code != 200:
-        print(f"Error: API request failed with status code {response.status_code}")
-        print(f"Response content: {response.text}")
+        print(f"Error: API request failed for {chrom}:{pos} {ref}>{alt} with status code {response.status_code}")
         return None
     
     return response.json()
 
-def parse_frequencies(variant_data):
+def parse_vep_data(variant_data):
     frequencies = {}
-    if 'colocated_variants' in variant_data:
-        for cv in variant_data['colocated_variants']:
-            if 'frequencies' in cv:
-                for allele, freq_data in cv['frequencies'].items():
-                    frequencies[allele] = freq_data
-    return frequencies
+    genes = set()
+    
+    if variant_data:
+        for data in variant_data:
+            if 'colocated_variants' in data:
+                for cv in data['colocated_variants']:
+                    if 'frequencies' in cv:
+                        for allele, freqs in cv['frequencies'].items():
+                            for pop, freq in freqs.items():
+                                if pop in ['af', 'eas', 'amr', 'sas', 'afr', 'eur']:
+                                    frequencies[pop] = freq
+            if 'transcript_consequences' in data:
+                for consequence in data['transcript_consequences']:
+                    genes.add(consequence.get('gene_symbol', 'N/A'))
+    
+    return {
+        'frequencies': frequencies,
+        'genes': list(genes)
+    }
+
+def create_database(db_name):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS variants (
+            chrom TEXT,
+            pos INTEGER,
+            ref TEXT,
+            alt TEXT,
+            genes TEXT,
+            af REAL,
+            eas REAL,
+            amr REAL,
+            sas REAL,
+            afr REAL,
+            eur REAL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def insert_variant(db_name, variant_data, parsed_data):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    
+    chrom, pos, ref, alt = variant_data
+    genes = ','.join(parsed_data['genes'])
+    frequencies = parsed_data['frequencies']
+    
+    cursor.execute('''
+        INSERT INTO variants (
+            chrom, pos, ref, alt, genes, af, eas, amr, sas, afr, eur
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        chrom, pos, ref, alt, genes, 
+        frequencies.get('af'), frequencies.get('eas'), frequencies.get('amr'), 
+        frequencies.get('sas'), frequencies.get('afr'), frequencies.get('eur')
+    ))
+    
+    conn.commit()
+    conn.close()
 
 def main():
-    parser = argparse.ArgumentParser(description="Test VEP API for variants in a VCF file")
+    parser = argparse.ArgumentParser(description="Process GRCh37 variants from a VCF file, fetch VEP data, and store in a SQLite database.")
     parser.add_argument('vcf', help="Path to the input VCF file")
-    parser.add_argument('--assembly', choices=['GRCh37', 'GRCh38'], required=True, help="Genome assembly")
-    parser.add_argument('--limit', type=int, default=10, help="Limit the number of variants to process")
+    parser.add_argument('--db', help="Path to the SQLite database", default="variants.db")
+    parser.add_argument('--sleep', type=float, default=1, help="Sleep time between API calls in seconds")
     args = parser.parse_args()
 
     vcf_file = args.vcf
-    assembly = args.assembly
-    limit = args.limit
-
-    if assembly == 'GRCh38':
-        server = "https://rest.ensembl.org"
-    elif assembly == 'GRCh37':
-        server = "https://grch37.rest.ensembl.org"
-
-    variants = read_vcf(vcf_file)[:limit]  # Limit the number of variants
+    db_name = args.db
+    sleep_time = args.sleep
     
-    batch_size = 200  # VEP API limit
-    for i in range(0, len(variants), batch_size):
-        batch = variants[i:i+batch_size]
-        print(f"Processing batch {i//batch_size + 1} ({len(batch)} variants)")
-        
-        result = process_variants(batch, server, assembly)
-        
-        if result:
-            for variant_data in result:
-                print("\nVariant:", variant_data.get('input'))
-                print("Most severe consequence:", variant_data.get('most_severe_consequence'))
-                
-                frequencies = parse_frequencies(variant_data)
-                if frequencies:
-                    print("Frequencies:")
-                    print(json.dumps(frequencies, indent=2))
-                else:
-                    print("No frequency data available")
-                
-                print("-" * 50)
-        else:
-            print("No result returned from API for this batch")
-        
-        print("\n" + "=" * 50 + "\n")
+    if os.path.exists(db_name):
+        os.remove(db_name)
+    
+    create_database(db_name)
+    
+    variants = read_vcf(vcf_file)
+    server = "https://grch37.rest.ensembl.org"
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    
+    for variant in variants:
+        vep_data = process_variant(variant, server, headers, sleep_time)
+        if vep_data:
+            parsed_data = parse_vep_data(vep_data)
+            insert_variant(db_name, variant, parsed_data)
+            chrom, pos, ref, alt = variant
+            print(f"Variant: {chrom} {pos} {ref}>{alt}")
+            print(f"Genes: {', '.join(parsed_data['genes'])}")
+            print(f"Frequencies: {parsed_data['frequencies']}")
+            print("")
 
 if __name__ == "__main__":
     main()

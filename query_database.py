@@ -22,7 +22,7 @@ def query_database(db_path):
     total_rows = cursor.fetchone()[0]
 
     # Count rows where gnomadg is not "Na"
-    cursor.execute("SELECT COUNT(*) FROM variants WHERE gnomadg != 'Na'")
+    cursor.execute("SELECT COUNT(*) FROM variants WHERE gnomadg == 'Na' and existing_variant != 'Na' LIMIT 20")
     non_na_rows = cursor.fetchone()[0]
 
     # Calculate percentage
@@ -34,8 +34,9 @@ def query_database(db_path):
     print("\n")
 
     # Execute a SELECT * query
-    cursor.execute("SELECT * FROM variants LIMIT 30;")
-
+    #cursor.execute("SELECT * FROM variants WHERE variants.gnomadg != 'Na' Limit 10;")
+    #cursor.execute("SELECT * FROM variants  Limit 10;")
+    cursor.execute("SELECT * FROM variants WHERE gnomadg = 'Na' AND existing_variant != 'Na' LIMIT 10;")
     # Fetch all rows
     rows = cursor.fetchall()
 

@@ -34,9 +34,9 @@ def query_database(db_path):
     print("\n")
 
     # Execute a SELECT * query
-    #cursor.execute("SELECT * FROM variants WHERE variants.gnomadg != 'Na' Limit 10;")
+    cursor.execute("SELECT * FROM variants WHERE variants.gnomadg != 'Na' Limit 10;")
     #cursor.execute("SELECT * FROM variants  Limit 10;")
-    cursor.execute("SELECT * FROM variants WHERE gnomadg = 'Na' AND existing_variant != 'Na' LIMIT 10;")
+   # cursor.execute("SELECT * FROM variants WHERE gnomadg = 'Na' AND existing_variant != 'Na' LIMIT 10;")
     # Fetch all rows
     rows = cursor.fetchall()
 
@@ -54,7 +54,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "GRCh38_indels_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh38_sample_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

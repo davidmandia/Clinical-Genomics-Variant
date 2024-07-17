@@ -46,6 +46,7 @@ def parse_vep_data(variant_data):
     genes = set()
     consequences = set()
     existing_variant = "Na"
+    #print("variant_data", variant_data)
     
     if 'colocated_variants' in variant_data:
         for cv in variant_data['colocated_variants']:
@@ -202,7 +203,7 @@ def main():
     dbs_dir = os.path.join(output_dir, "database")
     os.makedirs(dbs_dir, exist_ok=True)
     
-    db_name = os.path.join(dbs_dir, f'{assembly}_indels_variant.db')
+    db_name = os.path.join(dbs_dir, f'{vcf_name}_variant.db')
     
     # Remove existing database if it exists
     if os.path.exists(db_name):

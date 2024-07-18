@@ -94,17 +94,17 @@ def create_database(db_name):
             operation TEXT,
             transcript_ref TEXT,
             transcript_pos TEXT,
-            gnomadg REAL,
-            gnomadg_eas REAL,
-            gnomadg_nfe REAL,
-            gnomadg_fin REAL,
-            gnomadg_amr REAL,
-            gnomadg_afr REAL,
-            gnomadg_asj REAL,
-            gnomadg_oth REAL,
-            gnomadg_sas REAL,
-            gnomadg_mid REAL,
-            gnomadg_ami REAL,
+            af REAL,
+            af_eas REAL,
+            af_nfe REAL,
+            af_fin REAL,
+            af_amr REAL,
+            af_afr REAL,
+            af_asj REAL,
+            af_oth REAL,
+            af_sas REAL,
+            af_mid REAL,
+            af_ami REAL,
             genes TEXT,
             consequences TEXT,
             existing_variant TEXT
@@ -133,7 +133,7 @@ def process_results_and_insert(results, original_variants, db_name):
         genomic_ref = info_dict.get('GENOME_REF', '')  
         
         
-        # in CHG38 the eur gnomadg field is called gnomadg_nfe vs 37 is eur
+        # in CHG38 the eur gnomadg field is called gnomadg_nfe vs 37 is somethimes uses 1000genomes project
         # in CHG38 the average gnomadg vs 37 is af
         # the rest in Ch38 they have a prefix gnomadg_ vs 37 they don't
         # frequencies = {'af': "Na", 'eas': "Na", 'amr': "Na", 'sas': "Na", 'afr': "Na", 'eur': "Na"}
@@ -176,9 +176,9 @@ def process_results_and_insert(results, original_variants, db_name):
         INSERT INTO variants (
             chrom, pos, ref, alt, qual, filter, genomic_ref,
             operation, transcript_ref, transcript_pos,
-            gnomadg, gnomadg_eas, gnomadg_nfe, gnomadg_fin,
-            gnomadg_amr, gnomadg_afr, gnomadg_asj, gnomadg_oth,
-            gnomadg_sas, gnomadg_mid, gnomadg_ami, genes, consequences,
+            af, af_eas, af_nfe, af_fin,
+            af_amr, af_afr, af_asj, af_oth,
+            af_sas, af_mid, af_ami, genes, consequences,
             existing_variant
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

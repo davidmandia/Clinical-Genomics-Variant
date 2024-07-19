@@ -1,2 +1,3 @@
 input/blastdb/GRCh38.nsq
 input/*
+gff_data/*

@@ -21,23 +21,20 @@ def query_database(db_path):
     cursor.execute("SELECT COUNT(*) FROM variants")
     total_rows = cursor.fetchone()[0]
 
-    # Count rows where gnomadg is not "Na"
-    cursor.execute("SELECT COUNT(*) FROM variants WHERE gnomadg == 'Na' and existing_variant != 'Na' LIMIT 20")
-    non_na_rows = cursor.fetchone()[0]
+    # Count rows where clinical label is different from "No Data"
+    cursor.execute("SELECT COUNT(*) FROM variants WHERE clinical_label != 'No Data'")
+    relevant_rows = cursor.fetchone()[0]
 
     # Calculate percentage
-    percentage = (non_na_rows / total_rows) * 100 if total_rows > 0 else 0
+    relevant_percentage = (relevant_rows / total_rows) * 100 if total_rows > 0 else 0
 
     print(f"Total rows: {total_rows}")
-    print(f"Rows with gnomadg value: {non_na_rows}")
-    print(f"Percentage of rows with gnomadg value: {percentage:.2f}%")
+    print(f"Rows with clinical relevance: {relevant_rows}")
+    print(f"Percentage of rows with clinical relevance: {relevant_percentage:.2f}%")
     print("\n")
 
-    # Execute a SELECT * query
-    cursor.execute("SELECT * FROM variants WHERE variants.gnomadg != 'Na' Limit 10;")
-    #cursor.execute("SELECT * FROM variants  Limit 10;")
-   # cursor.execute("SELECT * FROM variants WHERE gnomadg = 'Na' AND existing_variant != 'Na' LIMIT 10;")
-    # Fetch all rows
+    # Execute a SELECT * query for rows where clinical label is different from "No Data"
+    cursor.execute("SELECT * FROM variants WHERE clinical_label != 'No Data' LIMIT 10;")
     rows = cursor.fetchall()
 
     # Get column names
@@ -54,7 +51,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "GRCh38_sample_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh38_indels_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

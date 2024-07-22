@@ -1,6 +1,7 @@
-
 import sqlite3
 import pandas as pd
+import argparse
+
 # Function to parse the GFF file and extract gene information
 def parse_gff(gff_file):
     genes = []
@@ -35,13 +36,6 @@ def convert_chrom(chrom):
         return 24
     else:
         return None
-
-# Example usage
-gff_file = 'gff_data/GCF_000001405.40-RS_2023_03_genomic.gff'
-genes_df = parse_gff(gff_file)
-genes_df['chrom'] = genes_df['chrom'].apply(convert_chrom)
-genes_df = genes_df.dropna(subset=['chrom'])  # Only keep rows with valid chromosome numbers
-print(genes_df.head())
 
 # Function to update the database with gene information
 def update_database(db_path, genes_df):
@@ -80,7 +74,21 @@ def update_database(db_path, genes_df):
     conn.commit()
     conn.close()
 
-# Main script
-db_path = 'output/database/GRCh38_indels_variant.db'
-update_database(db_path, genes_df)
-print("Database updated with gene symbols and IDs.")
+def main():
+    parser = argparse.ArgumentParser(description="Update a SQLite database with gene information from a GFF file.")
+    parser.add_argument('db_path', help="Path to the SQLite database")
+    args = parser.parse_args()
+
+    db_path = args.db_path
+    gff_file = 'gff_data/GCF_000001405.40-RS_2023_03_genomic.gff'
+
+    genes_df = parse_gff(gff_file)
+    genes_df['chrom'] = genes_df['chrom'].apply(convert_chrom)
+    genes_df = genes_df.dropna(subset=['chrom'])  # Only keep rows with valid chromosome numbers
+    print(genes_df.head())
+
+    update_database(db_path, genes_df)
+    print("Database updated with gene symbols and IDs.")
+
+if __name__ == "__main__":
+    main()

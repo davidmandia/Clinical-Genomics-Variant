@@ -24,6 +24,7 @@ def read_vcf_file(vcf_file):
                 'filter': filter_,
                 'info': info
             })
+    print(f"Read {len(variants)} variants from the VCF file.")
     return variants
 
 def process_batch(batch, server, headers, assembly, sleep_time=1):
@@ -46,7 +47,6 @@ def parse_vep_data(variant_data):
     genes = set()
     consequences = set()
     existing_variant = "Na"
-    #print("variant_data", variant_data)
     
     if 'colocated_variants' in variant_data:
         for cv in variant_data['colocated_variants']:
@@ -56,8 +56,6 @@ def parse_vep_data(variant_data):
                 gnomad_fre = next(iter(cv["frequencies"].values()), {})
                 for pop, freq in gnomad_fre.items():
                     frequencies[pop] = freq
-                
-                
 
     if 'transcript_consequences' in variant_data:
         for tc in variant_data['transcript_consequences']:
@@ -67,7 +65,7 @@ def parse_vep_data(variant_data):
                 genes.add(tc['gene_id'])
             if 'consequence_terms' in tc:
                 consequences.update(tc['consequence_terms'])
- 
+
     return frequencies, list(genes), list(consequences), existing_variant
 
 def parse_info(info_str):
@@ -76,7 +74,6 @@ def parse_info(info_str):
         if '=' in item:
             key, value = item.split('=', 1)
             info_dict[key] = value
-    #print("info_dict", info_dict)
     return info_dict
 
 def create_database(db_name):
@@ -132,27 +129,14 @@ def process_results_and_insert(results, original_variants, db_name):
         
         genomic_ref = info_dict.get('GENOME_REF', '')  
         
-        
-        # in CHG38 the eur gnomadg field is called gnomadg_nfe vs 37 is somethimes uses 1000genomes project
-        # in CHG38 the average gnomadg vs 37 is af
-        # the rest in Ch38 they have a prefix gnomadg_ vs 37 they don't
-        # frequencies = {'af': "Na", 'eas': "Na", 'amr': "Na", 'sas': "Na", 'afr': "Na", 'eur': "Na"}
-        
-        
-        ## We most likely have the api for assembly 37 
         if "af" in frequencies.keys():
             gnomad_fields = ['af', 'eas', 'eur', 'gnomadg_fin', 'amr', 'afr', 'gnomadg_asj', 'gnomadg_oth', 'sas', 'gnomadg_mid', 'gnomadg_ami']
         
-        ## We most lilkely have version 38
         elif "gnomadg" in frequencies.keys():
             gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']
         else:
             gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']   
 
-        #print("frequencies", frequencies)
-        ## Can probabaly add a conditional statement to check if the key is in the dictionary
-        ## if not add it with a value of "Na"
-        #print("gnomad_fields", gnomad_fields)
         gnomad_values = [frequencies.get(field, "Na") for field in gnomad_fields]
         
         insert_data.append((
@@ -186,6 +170,7 @@ def process_results_and_insert(results, original_variants, db_name):
     
     conn.commit()
     conn.close()
+    print(f"Inserted {len(insert_data)} variants into the database.")
 
 def main():
     parser = argparse.ArgumentParser(description="Process a VCF file, fetch VEP data, and store in a SQLite database.")
@@ -205,7 +190,6 @@ def main():
     
     db_name = os.path.join(dbs_dir, f'{vcf_name}_variant.db')
     
-    # Remove existing database if it exists
     if os.path.exists(db_name):
         os.remove(db_name)
     
@@ -213,7 +197,6 @@ def main():
     
     vcf_data = read_vcf_file(vcf_file)
     
-    ## The APi is different based on the genome assembly used 
     if assembly == 'GRCh38':
         server = "https://rest.ensembl.org"
     elif assembly == 'GRCh37':
@@ -223,6 +206,7 @@ def main():
     
     # Create batches of 200 variants
     batches = [vcf_data[i:i+200] for i in range(0, len(vcf_data), 200)]
+    print(f"Created {len(batches)} batches for processing.")
     
     # Set up multiprocessing
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
@@ -233,6 +217,7 @@ def main():
     
     # Flatten results
     all_results = [item for sublist in results for item in sublist]
+    print(f"Processed {len(all_results)} variants from VEP API.")
     
     # Process results and insert into database
     process_results_and_insert(all_results, vcf_data, db_name)

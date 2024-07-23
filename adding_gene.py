@@ -77,10 +77,11 @@ def update_database(db_path, genes_df):
 def main():
     parser = argparse.ArgumentParser(description="Update a SQLite database with gene information from a GFF file.")
     parser.add_argument('db_path', help="Path to the SQLite database")
+    parser.add_argument('gff', help="Path to the GFF File")
     args = parser.parse_args()
 
     db_path = args.db_path
-    gff_file = 'gff_data/GCF_000001405.40-RS_2023_03_genomic.gff'
+    gff_file = args.gff
 
     genes_df = parse_gff(gff_file)
     genes_df['chrom'] = genes_df['chrom'].apply(convert_chrom)

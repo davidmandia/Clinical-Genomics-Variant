@@ -28,5 +28,7 @@ def download_and_extract_gff(url, output_dir):
 
 # Example usage
 url = "https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/historical/GRCh38/GCF_000001405.40-RS_2023_03_historical/GCF_000001405.40-RS_2023_03_genomic.gff.gz"
+url2 = "https://ftp.ncbi.nlm.nih.gov/genomes/all/annotation_releases/9606/105.20201022/GCF_000001405.25_GRCh37.p13/GCF_000001405.25_GRCh37.p13_genomic.gff.gz"
 output_dir = "gff_data"
 download_and_extract_gff(url, output_dir)
+download_and_extract_gff(url2, output_dir)

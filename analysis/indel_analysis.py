@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sqlite3
 import os
+import argparse
 
 def read_database(db_path):
     conn = sqlite3.connect(db_path)
@@ -63,7 +64,12 @@ def indel_distribution_analysis(df, output_dir):
     plt.show()
 
 def main():
-    db_path = "output/database/GRCh38_indels_variant.db"
+    parser = argparse.ArgumentParser(description="Analyze gene frequency from a SQLite database.")
+    parser.add_argument('db_path', help="Path to the SQLite database")
+    args = parser.parse_args()
+
+    db_path = args.db_path
+
     output_dir = "analysis/figures"
     os.makedirs(output_dir, exist_ok=True)
     

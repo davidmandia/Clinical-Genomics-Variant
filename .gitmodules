@@ -1,3 +1,0 @@
-[submodule "ensembl-vep"]
-	path = ensembl-vep
-	url = https://github.com/ensembl/ensembl-vep

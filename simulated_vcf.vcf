@@ -1,0 +1,15 @@
+##fileformat=VCFv4.2
+#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
+7       265058  .       T       A       63.87   PASS    .
+12      759305  .       G       T       92.12   PASS    .
+10       104569  .       C       G       70.75   PASS    .
+4       265058  .       T       A       63.87   PASS    .
+2      759305  .       G       T       92.12   PASS    .
+1       2307575  .       CC       C       70.75   PASS    .
+1	1014533	.	AA	A	99	PASS	.
+1	1398338	.	A	AC	99	PASS	.
+1	1398347	.	AG	A	99	PASS	.
+1	1398353	.	AG	A	99	PASS    .
+1	2307796	.	A	AC	99	PASS	.
+
+

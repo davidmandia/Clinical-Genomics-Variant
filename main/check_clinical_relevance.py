@@ -5,7 +5,17 @@ import argparse
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+# Function to extract color label from evidence list
 def get_color_from_evidence(evidence_list):
+    """
+    Determines the color label based on the evidence list.
+
+    Args:
+        evidence_list (list): List of evidence strings.
+
+    Returns:
+        str: The color label ('Green', 'Amber', 'Red') or 'No color label found'.
+    """
     for evidence in evidence_list:
         if 'Green' in evidence:
             return 'Green'
@@ -15,14 +25,28 @@ def get_color_from_evidence(evidence_list):
             return 'Red'
     return 'No color label found'
 
-def get_clinically_relevant_gene_color(gene, api_url_base, last_gene, last_color, max_retries=5, backoff_factor=1):
+# Function to get the clinically relevant gene color
+def get_clinically_relevant_gene_color(gene, api_url_base, last_gene=None, last_color=None, max_retries=5, backoff_factor=1):
+    """
+    Fetches the color label for a given gene from an API, with retry logic.
+
+    Args:
+        gene (str): The gene symbol.
+        api_url_base (str): Base URL for the API.
+        last_gene (str): The last gene queried.
+        last_color (str): The last color obtained from the API.
+        max_retries (int): Maximum number of retries for the API call.
+        backoff_factor (int): Factor for exponential backoff in case of API call failure.
+
+    Returns:
+        tuple: Gene and its associated color label.
+    """
     if gene == last_gene:
-        return last_color
-    
+        return last_gene, last_color
+
     api_url = f"{api_url_base}{gene}"
     print(f"Testing API for gene: {gene}")
-    print("api_url:", api_url)
-    
+
     for attempt in range(max_retries):
         try:
             response = requests.get(api_url)
@@ -32,51 +56,52 @@ def get_clinically_relevant_gene_color(gene, api_url_base, last_gene, last_color
                     gene_data = data["results"][0]
                     evidence = gene_data.get("evidence", [])
                     color_label = get_color_from_evidence(evidence)
-                    print(f"API is working correctly for gene: {gene}. Here's the color label found in the evidence:")
-                    print("Color label:", color_label)
                     return gene, color_label
                 else:
-                    print(f"No results found for gene: {gene}")
                     return gene, 'No Data'
             elif response.status_code == 404:
-                print(f"API request returned 404 for gene: {gene}")
                 return gene, 'No Data'
             else:
                 print(f"API request failed for gene: {gene} with status code: {response.status_code}")
                 print(response.text)
         except requests.exceptions.RequestException as e:
-            print(f"API request encountered an error: {e}")
             if attempt < max_retries - 1:
                 sleep_time = backoff_factor * (2 ** attempt)
-                print(f"Retrying in {sleep_time} seconds...")
                 time.sleep(sleep_time)
             else:
                 print(f"Failed to fetch data for gene: {gene} after {max_retries} attempts.")
                 return gene, 'No Data'
 
+# Function to check and update clinical relevance in the database
 def check_clinical_relevance(db_path, api_url_base):
+    """
+    Updates a SQLite database with clinically relevant gene information from an API.
+
+    Args:
+        db_path (str): Path to the SQLite database.
+        api_url_base (str): Base URL for the API.
+    """
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    try:
-        cursor.execute("ALTER TABLE variants ADD COLUMN clinically_relevant TEXT")
-    except sqlite3.OperationalError:
-        print("Column 'clinically_relevant' already exists.")
+    # Add columns for clinical relevance if they do not exist
+    cursor.execute("PRAGMA table_info(variants)")
+    columns = [column[1] for column in cursor.fetchall()]
     
-    try:
+    if 'clinically_relevant' not in columns:
+        cursor.execute("ALTER TABLE variants ADD COLUMN clinically_relevant TEXT")
+    if 'clinical_label' not in columns:
         cursor.execute("ALTER TABLE variants ADD COLUMN clinical_label TEXT")
-    except sqlite3.OperationalError:
-        print("Column 'clinical_label' already exists.")
     
     conn.commit()
 
     df = pd.read_sql_query("SELECT * FROM variants", conn)
-
     df['gene_symbol'] = df['gene_symbol'].fillna('')
 
     last_gene = None
     last_color = None
     
+    # Function to get labels for each gene symbol
     def get_labels(gene_symbol):
         nonlocal last_gene, last_color
         if gene_symbol == '':
@@ -92,11 +117,13 @@ def check_clinical_relevance(db_path, api_url_base):
             colors.append(color)
         return ','.join(set(colors)), 'Yes' if 'Green' in colors or 'Amber' in colors or 'Red' in colors else 'No'
 
+    # Use ThreadPoolExecutor for parallel processing
     with ThreadPoolExecutor(max_workers=10) as executor:
         results = list(executor.map(get_labels, df['gene_symbol']))
 
     df['clinical_label'], df['clinically_relevant'] = zip(*results)
 
+    # Update the database with the new information
     for index, row in df.iterrows():
         if row['gene_symbol'] != '':
             cursor.execute("""
@@ -107,10 +134,10 @@ def check_clinical_relevance(db_path, api_url_base):
     
     conn.commit()
     conn.close()
-
     print("Database updated with clinically relevant genes and color labels.")
 
-if __name__ == "__main__":
+# Main function to parse arguments and execute the script
+def main():
     parser = argparse.ArgumentParser(description="Update a SQLite database with clinically relevant genes from PanelApp.")
     parser.add_argument('db_path', help="Path to the SQLite database")
     args = parser.parse_args()
@@ -119,3 +146,6 @@ if __name__ == "__main__":
     panel_app_api_url = 'https://panelapp.genomicsengland.co.uk/api/v1/genes/'
     
     check_clinical_relevance(db_path, panel_app_api_url)
+
+if __name__ == "__main__":
+    main()

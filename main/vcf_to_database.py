@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import requests
 import sqlite3
@@ -8,12 +9,23 @@ from functools import partial
 import time
 
 def read_vcf_file(vcf_file):
+    """
+    Reads a VCF file and extracts variant information.
+
+    Args:
+        vcf_file (str): Path to the VCF file.
+
+    Returns:
+        list: A list of dictionaries, each containing variant information.
+    """
     variants = []
     with open(vcf_file, 'r') as vcf:
         for line in vcf:
             if line.startswith('#'):
                 continue
             fields = line.strip().split('\t')
+            if len(fields) < 8:
+                continue  # Skip malformed lines
             chrom, pos, _, ref, alt, qual, filter_, info = fields[:8]
             variants.append({
                 'chrom': chrom,
@@ -28,6 +40,19 @@ def read_vcf_file(vcf_file):
     return variants
 
 def process_batch(batch, server, headers, assembly, sleep_time=1):
+    """
+    Processes a batch of variants by querying the Ensembl VEP API.
+
+    Args:
+        batch (list): A list of variant dictionaries.
+        server (str): The Ensembl VEP server URL.
+        headers (dict): HTTP headers for the API request.
+        assembly (str): The genome assembly (e.g., 'GRCh37', 'GRCh38').
+        sleep_time (int): Time to sleep between API requests.
+
+    Returns:
+        list: The JSON response from the VEP API.
+    """
     variants = [f"{v['chrom']} {v['pos']} . {v['ref']} {v['alt']} . . ." for v in batch]
     data = {
         "variants": variants,
@@ -39,10 +64,19 @@ def process_batch(batch, server, headers, assembly, sleep_time=1):
         "assembly": assembly
     }
     response = requests.post(f"{server}/vep/human/region", headers=headers, json=data)
-    time.sleep(sleep_time)  # Sleep after each API call
+    time.sleep(sleep_time)
     return response.json()
 
 def parse_vep_data(variant_data):
+    """
+    Parses the response from the VEP API to extract relevant data.
+
+    Args:
+        variant_data (dict): The VEP API response for a variant.
+
+    Returns:
+        tuple: Frequencies, gene list, consequences list, and existing variant ID.
+    """
     frequencies = {}
     genes = set()
     consequences = set()
@@ -69,6 +103,15 @@ def parse_vep_data(variant_data):
     return frequencies, list(genes), list(consequences), existing_variant
 
 def parse_info(info_str):
+    """
+    Parses the INFO field from the VCF file.
+
+    Args:
+        info_str (str): The INFO field as a semicolon-separated string.
+
+    Returns:
+        dict: A dictionary with key-value pairs extracted from the INFO field.
+    """
     info_dict = {}
     for item in info_str.split(';'):
         if '=' in item:
@@ -77,6 +120,12 @@ def parse_info(info_str):
     return info_dict
 
 def create_database(db_name):
+    """
+    Creates a SQLite database with a specific schema for storing variant data.
+
+    Args:
+        db_name (str): The name of the SQLite database file.
+    """
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     cursor.execute('''
@@ -111,6 +160,14 @@ def create_database(db_name):
     conn.close()
 
 def process_results_and_insert(results, original_variants, db_name):
+    """
+    Processes VEP API results and inserts them into the SQLite database.
+
+    Args:
+        results (list): The VEP API results.
+        original_variants (list): The original variants from the VCF file.
+        db_name (str): The SQLite database file name.
+    """
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     
@@ -129,9 +186,9 @@ def process_results_and_insert(results, original_variants, db_name):
         
         genomic_ref = info_dict.get('GENOME_REF', '')  
         
+        # Determine which gnomAD fields to use based on the presence of data
         if "af" in frequencies.keys():
-            gnomad_fields = ['af', 'eas', 'eur', 'gnomadg_fin', 'amr', 'afr', 'gnomadg_asj', 'gnomadg_oth', 'sas', 'gnomadg_mid', 'gnomadg_ami']
-        
+            gnomad_fields = ['af', 'af_eas', 'af_nfe', 'af_fin', 'af_amr', 'af_afr', 'af_asj', 'af_oth', 'af_sas', 'af_mid', 'af_ami']
         elif "gnomadg" in frequencies.keys():
             gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']
         else:

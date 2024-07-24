@@ -19,7 +19,7 @@ def convert_chrom_to_int(chrom):
 
 
 
-def analyze_coding_vs_noncoding(df, output_dir, db_path):
+def analyze_coding_vs_noncoding(df, output_dir, db_name):
     # Classify regions as coding or non-coding
     coding_terms = ['coding_sequence_variant', 'missense_variant', 'synonymous_variant', 'frameshift_variant', 'stop_gained', 'stop_lost', 'start_lost']
     
@@ -36,11 +36,11 @@ def analyze_coding_vs_noncoding(df, output_dir, db_path):
     # Plot the distribution of indels in coding vs. non-coding regions
     plt.figure(figsize=(8, 5))
     region_counts.plot(kind='bar', color=['blue', 'orange'])
-    plt.title(f'Distribution of Indels in Coding vs. Non-coding Regions / {db_path}')
+    plt.title(f'Distribution of Indels in Coding vs. Non-coding Regions')
     plt.xlabel('Region')
     plt.ylabel('Count')
     plt.tight_layout()
-    plt.savefig(f"{output_dir}/indel_distribution_coding_vs_noncoding.png")
+    plt.savefig(f"{output_dir}/indel_{db_name}distribution_coding_vs_noncoding.png")
     plt.show()
 
 def main():
@@ -53,10 +53,12 @@ def main():
     output_dir = "analysis/figures"
     os.makedirs(output_dir, exist_ok=True)
     
+    db_name = os.path.basename(db_path).replace('.db', '')
+    
     df = read_database(db_path)
     
 
-    analyze_coding_vs_noncoding(df, output_dir, db_path)
+    analyze_coding_vs_noncoding(df, output_dir, db_name)
 
 if __name__ == "__main__":
     main()

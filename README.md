@@ -22,6 +22,9 @@ This project provides a suite of Python scripts for genomic data processing and 
 4. **Genomic Analysis and Visualization**: 
    - Analyzes and visualizes affected genes and variant distribution.
    - Provides population-specific variant frequencies.
+5. **VCF reader for expected variants**:
+   - VCF File Parsing and Database Matching:
+   - Output Reporting
 
 ## Requirements
 
@@ -55,6 +58,14 @@ python requirements/download_gff.py
 
 
 ## Usage
+
+### To performe the build of the databases for both genomic version along with all script you can run 
+
+```bash
+bash requirements/programm.sh
+```
+
+Alternatively, you can run the scripts separately
 
 ### 1. Short Indel Identification
 
@@ -93,7 +104,7 @@ bash analysis/run_analysis.sh
 
 Analyse a VCF files as input and it informs the user if a varaint call affect a trascript with gap along with its clinical relevance
 ```bash
-python main/expected_variant_vcf_reader.py path/to/vcf_file_to_test
+python expected_variant_vcf_reader.py path/to/vcf_file_to_test
 ```
 
 ## Output

@@ -65,11 +65,30 @@ def check_expected_variations(db_path, vcf_variants):
 
         result = cursor.fetchone()
         if result:
+            #print("results", result)
+            gnomad_data = {
+                'af': result[10]  ## The rest of the gnomad data has been commented out for now
+                # ,'af_eas': result[11],
+                # 'af_nfe': result[12],
+                # 'af_fin': result[13],
+                # 'af_amr': result[14],
+                # 'af_afr': result[15],
+                # 'af_asj': result[16],
+                # 'af_oth': result[17],
+                # 'af_sas': result[18],
+                # 'af_mid': result[19],
+                # 'af_ami': result[20]
+            }
+            gene_affected = result[24]
+            clinical_label = result[27]
+            clinically_relevant = result[26]
+
             expected_variations.append({
                 'variant': variant,
-                'clinical_label': result[23],  # Adjust the index based on your schema
-                'clinically_relevant': result[22],  # Adjust the index based on your schema
-                'extra_data': result  # Add any extra relevant data here
+                'gnomad_data': gnomad_data,
+                'affected_gene': gene_affected,
+                'clinical_label': clinical_label,
+                'clinically_relevant': clinically_relevant
             })
         else:
             unexpected_variations.append(variant)
@@ -89,21 +108,23 @@ def output_results(expected_variations, unexpected_variations):
     print("Expected Variations:")
     for var in expected_variations:
         print(f"Variant: {var['variant']}")
+        print("affect gene:", var['affected_gene'])
         print(f"Clinical Label: {var['clinical_label']}")
         print(f"Clinically Relevant: {var['clinically_relevant']}")
-        print(f"Extra Data: {var['extra_data']}")
+        print(f"gnomAD Data: {var['gnomad_data']}")
         print("")
-
-    print("Unexpected Variations:")
-    for var in unexpected_variations:
-        print(f"Variant: {var}")
-        print("")
+    
+    ## Not match on database
+    # print("Unexpected Variations:")
+    # for var in unexpected_variations:
+    #     print(f"Variant: {var}")
+    #     print("")
 
 def main():
     """
     Main function to handle argument parsing and function execution.
     """
-    print("Executing main function...")
+    #print("Executing main function...")
     parser = argparse.ArgumentParser(description="Check for expected variations in a given VCF input and interface with the database.")
     parser.add_argument('db_path', help="Path to the SQLite database")
     parser.add_argument('vcf_file', help="Path to the input VCF file")

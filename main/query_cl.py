@@ -8,7 +8,7 @@ def query_clinically_relevant_variants(db_path):
 
     query = """
     SELECT * FROM variants
-    WHERE clinical_label IN ('Green', 'Amber', 'Red')
+    WHERE clinical_label IN ('Green', 'Amber', 'Red') AND af != "Na"
     LIMIT 10
     """
 

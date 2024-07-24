@@ -4,14 +4,21 @@ import pandas as pd
 import argparse
 
 def read_vcf_file(vcf_file):
-   # print("Reading VCF file...")
+    """
+    Reads a VCF file and extracts variant information.
+
+    Args:
+        vcf_file (str): Path to the VCF file.
+
+    Returns:
+        list: A list of dictionaries, each containing variant information.
+    """
     variants = []
     with open(vcf_file, 'r') as vcf:
         for line in vcf:
             if line.startswith('#'):
                 continue
             fields = line.strip().split()
-           # print("fields:", fields)  # Debugging statement
             if len(fields) < 8:
                 print(f"Skipping malformed line: {line.strip()}")
                 continue
@@ -25,10 +32,20 @@ def read_vcf_file(vcf_file):
                 'filter': filter_,
                 'info': info
             })
-    print("Variants extracted from VCF")  
+    print("Variants extracted from VCF")
     return variants
 
 def check_expected_variations(db_path, vcf_variants):
+    """
+    Checks for expected variations in the database against a list of VCF variants.
+
+    Args:
+        db_path (str): Path to the SQLite database.
+        vcf_variants (list): List of variants extracted from a VCF file.
+
+    Returns:
+        tuple: Two lists, one for expected and one for unexpected variations.
+    """
     print("Connecting to the database...")
     if not os.path.exists(db_path):
         print(f"Database file {db_path} does not exist.")
@@ -41,14 +58,12 @@ def check_expected_variations(db_path, vcf_variants):
     unexpected_variations = []
 
     for variant in vcf_variants:
-       # print("Checking variant:", variant)  # Debugging statement
         cursor.execute("""
             SELECT * FROM variants
             WHERE chrom = ? AND pos = ? AND ref = ? AND alt = ?
         """, (variant['chrom'], variant['pos'], variant['ref'], variant['alt']))
 
         result = cursor.fetchone()
-       # print("Query result for variant", variant, ":", result)  # Debugging statement
         if result:
             expected_variations.append({
                 'variant': variant,
@@ -64,8 +79,13 @@ def check_expected_variations(db_path, vcf_variants):
     return expected_variations, unexpected_variations
 
 def output_results(expected_variations, unexpected_variations):
-    #print("len", len(expected_variations), expected_variations) # Debugging statement
+    """
+    Outputs the results of the expected and unexpected variations.
 
+    Args:
+        expected_variations (list): List of expected variant information.
+        unexpected_variations (list): List of unexpected variant information.
+    """
     print("Expected Variations:")
     for var in expected_variations:
         print(f"Variant: {var['variant']}")
@@ -80,7 +100,10 @@ def output_results(expected_variations, unexpected_variations):
         print("")
 
 def main():
-    print("Executing main function...")  # Debugging statement
+    """
+    Main function to handle argument parsing and function execution.
+    """
+    print("Executing main function...")
     parser = argparse.ArgumentParser(description="Check for expected variations in a given VCF input and interface with the database.")
     parser.add_argument('db_path', help="Path to the SQLite database")
     parser.add_argument('vcf_file', help="Path to the input VCF file")

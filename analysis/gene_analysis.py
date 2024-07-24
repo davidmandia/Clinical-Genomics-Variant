@@ -35,7 +35,7 @@ def analyze_gene_frequency(df, output_dir, db_name):
     # Count the frequency of each gene. Exclude the first line with an empty gene name
     gene_counts = df_genes['gene_symbol'].value_counts().head(20).drop('', errors='ignore')
 
-    print("gene count", gene_counts)
+    #print("gene count", gene_counts)
     
     # Plot the top 20 genes most frequently affected by indels
     plt.figure(figsize=(10, 6))

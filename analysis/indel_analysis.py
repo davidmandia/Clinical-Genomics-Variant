@@ -17,7 +17,7 @@ def convert_chrom_to_int(chrom):
     except ValueError:
         return None
 
-def indel_distribution_analysis(df, output_dir):
+def indel_distribution_analysis(df, output_dir, db_name):
     # Classify indels as Insertions or Deletions
     df['indel_type'] = np.where(df['ref'].str.len() > df['alt'].str.len(), 'Deletion', 'Insertion')
     indel_counts = df['indel_type'].value_counts()
@@ -42,7 +42,7 @@ def indel_distribution_analysis(df, output_dir):
     plt.title('Frequency of Insertions vs. Deletions')
     plt.xlabel('Indel Type')
     plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_frequency.png")
+    plt.savefig(f"{output_dir}/indel_{db_name}frequency.png")
 
     # Plot size distribution of Indels
     plt.subplot(3, 1, 2)
@@ -50,7 +50,7 @@ def indel_distribution_analysis(df, output_dir):
     plt.title('Size Distribution of Indels')
     plt.xlabel('Indel Size (bp)')
     plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_size_distribution.png")
+    plt.savefig(f"{output_dir}/indel_{db_name}size_distribution.png")
 
     # Plot indel frequencies across chromosomes
     plt.subplot(3, 1, 3)
@@ -58,7 +58,7 @@ def indel_distribution_analysis(df, output_dir):
     plt.title('Indel Frequency Across Chromosomes')
     plt.xlabel('Chromosome')
     plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_chromosome_frequency.png")
+    plt.savefig(f"{output_dir}/indel_{db_name}chromosome_frequency.png")
 
     plt.tight_layout(h_pad=3.0)
     plt.show()
@@ -73,8 +73,12 @@ def main():
     output_dir = "analysis/figures"
     os.makedirs(output_dir, exist_ok=True)
     
+    # Extract database name for labeling
+    db_name = os.path.basename(db_path).replace('.db', '')
+
+
     df = read_database(db_path)
-    indel_distribution_analysis(df, output_dir)
+    indel_distribution_analysis(df, output_dir, db_name)
 
 if __name__ == "__main__":
     main()

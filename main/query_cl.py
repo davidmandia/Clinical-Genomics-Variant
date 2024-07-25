@@ -7,16 +7,47 @@ def query_clinically_relevant_variants(db_path):
     cursor = conn.cursor()
 
     query = """
-    SELECT * FROM variants
-    WHERE clinical_label IN ('Green', 'Amber', 'Red') AND af != "Na"
-    LIMIT 10
+    SELECT count(*) FROM variants
+    WHERE clinical_label IN ('Green', 'Amber', 'Red');
     """
 
     cursor.execute(query)
     rows = cursor.fetchall()
+    
+    query = """
+    SELECT count(*) FROM variants;
+    """
+
+    cursor.execute(query)
+    rows2 = cursor.fetchall()
+    
+    query = """
+    SELECT count(*) FROM variants 
+    WHERE clinical_label IN ('Green', 'Amber', 'Red') and af != "Na" and gene = "MAPT";
+    """
+
+    cursor.execute(query)
+    rows3 = cursor.fetchall()
 
     conn.close()
-    return rows
+    return rows, rows2, rows3
+
+def query_db(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    
+    
+    query = """
+    SELECT count(*) FROM variants 
+    WHERE clinical_label IN ('Green')  and gene_symbol = "MAPT";
+    """
+
+    cursor.execute(query)
+    rows3 = cursor.fetchall()
+
+    conn.close()
+    return  rows3
 
 def print_variants(variants):
     if variants:
@@ -37,7 +68,8 @@ def main():
 
     db_path = args.db_path
 
-    variants = query_clinically_relevant_variants(db_path)
+    #variants = query_clinically_relevant_variants(db_path)
+    variants = query_db(db_path)
     print(variants)
     #print_variants(variants)
 

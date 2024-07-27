@@ -53,8 +53,8 @@ def calculate_metrics(df):
     Calculate various metrics from the DataFrame.
     """
     total_genes = len(df['genes'].unique())
-    genes_with_af = df['af'].notnull().sum()
-    clinically_relevant_genes = df[df['clinical_label'].notnull()]['genes'].nunique()
+    genes_with_af = df[df['af'] != 'Na']['genes'].nunique()
+    clinically_relevant_genes = df[~df['clinical_label'].isin(["Green", "Amber", "Red"])]['genes'].nunique()
     green_flag_genes = df[df['clinical_label'] == 'Green']['genes'].nunique()
     
     total_transcripts = len(df['transcript_ref'].unique())
@@ -86,12 +86,25 @@ def main():
     metrics = calculate_metrics(df)
 
     # Print results
+    print(f"Total number of rows: {len(df)}")
     print("Metrics Summary:")
     for key, value in metrics.items():
         print(f"{key}: {value}")
     
     print("\nTotal number of transcripts:", metrics['Total Transcripts'])
     print("Number of transcripts involved in clinically relevant genes (Green flag only):", metrics['Green Flag Transcripts'])
+    # Find genes with "Green" clinical relevance and non-null AF values
+    # Find genes with "Green" clinical relevance and non-null AF values (excluding "Na")
+    green_clinically_relevant_genes_with_af = df[(df['clinical_label'] == "Green") & (df['af'] != "Na")]['genes'].unique()
+    
+    # Convert the 'af' column to numeric, forcing errors to NaN (for safe conversion)
+    df['af_numeric'] = pd.to_numeric(df['af'], errors='coerce')
+    
+    # Filter the genes to include only those with AF values below 0.01
+    green_clinically_relevant_genes_with_af_below_001 = df[(df['clinical_label'] == "Green") & (df['af_numeric'] < 0.01)]['genes'].unique()
+    
+    print("Clinical relevant genes with rare indels", len(green_clinically_relevant_genes_with_af_below_001))
+    print("Genes with 'Green' clinical relevance and AF values below 0.01:", green_clinically_relevant_genes_with_af_below_001)
 
 
 if __name__ == "__main__":

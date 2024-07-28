@@ -1,97 +1,33 @@
-import sqlite3
-import pandas as pd
-import psycopg2
+import re
 
-# Step 1: Extract Data from SQLite
-def extract_data_from_sqlite(sqlite_db_path):
-    # Connect to SQLite database
-    sqlite_conn = sqlite3.connect(sqlite_db_path)
-    # Extract data from SQLite database
-    df = pd.read_sql_query("SELECT * FROM variants", sqlite_conn)
-    # Close the SQLite connection
-    sqlite_conn.close()
-    return df
-
-# Step 2: Prepare PostgreSQL Database
-def prepare_postgresql_database(pg_conn):
-    cursor = pg_conn.cursor()
-    # Create table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS variants (
-            chrom TEXT,
-            pos INTEGER,
-            ref TEXT,
-            alt TEXT,
-            qual REAL,
-            filter TEXT,
-            genomic_ref TEXT,
-            operation TEXT,
-            transcript_ref TEXT,
-            transcript_pos TEXT,
-            af REAL,
-            af_eas REAL,
-            af_nfe REAL,
-            af_fin REAL,
-            af_amr REAL,
-            af_afr REAL,
-            af_asj REAL,
-            af_oth REAL,
-            af_sas REAL,
-            af_mid REAL,
-            af_ami REAL,
-            genes TEXT,
-            consequences TEXT,
-            clinically_relevant TEXT,
-            clinical_label TEXT
-        );
-    """)
-    pg_conn.commit()
-    cursor.close()
-
-# Step 3: Transfer Data to PostgreSQL
-def transfer_data_to_postgresql(pg_conn, df):
-    cursor = pg_conn.cursor()
-    # Insert data into PostgreSQL
-    for _, row in df.iterrows():
-        cursor.execute("""
-            INSERT INTO variants (
-                chrom, pos, ref, alt, qual, filter, genomic_ref,
-                operation, transcript_ref, transcript_pos,
-                af, af_eas, af_nfe, af_fin,
-                af_amr, af_afr, af_asj, af_oth,
-                af_sas, af_mid, af_ami, genes, consequences,
-                clinically_relevant, clinical_label
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, tuple(row))
-    # Commit the transaction
-    pg_conn.commit()
-    cursor.close()
-
-def main():
-    # Database paths and credentials
-    sqlite_db_path = "output/database/GRCh38_indels_variant.db"
-
-    pg_conn = psycopg2.connect(
-    host="grch38-indels.cjcmykm4g8ti.us-east-1.rds.amazonaws.com",
-    database="grch38_indels",
-    user="postgres",
-    password="Cavia2014!",
-    port=5432
-)
-
+def modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file):
+    with open(sqlite_sql_file, 'r') as file:
+        sql_content = file.read()
     
-    # Extract data from SQLite
-    df = extract_data_from_sqlite(sqlite_db_path)
+    # Replace AUTOINCREMENT with SERIAL
+    sql_content = re.sub(r'\bAUTOINCREMENT\b', '', sql_content, flags=re.IGNORECASE)
     
-    # Prepare PostgreSQL database
-    prepare_postgresql_database(pg_conn)
+    # Replace TEXT with VARCHAR or keep as TEXT in PostgreSQL
+    # You can decide to convert TEXT to VARCHAR or keep as TEXT, below keeps as TEXT
+    sql_content = re.sub(r'\bTEXT\b', 'VARCHAR', sql_content, flags=re.IGNORECASE)
+    # or you can leave TEXT as it is in PostgreSQL since it's compatible
+    # Remove or comment out PRAGMA statements and other SQLite specific syntax
+    sql_content = re.sub(r'PRAGMA.*?;', '', sql_content, flags=re.IGNORECASE)
+    sql_content = re.sub(r'--.*?\\n', '', sql_content, flags=re.IGNORECASE)  # Remove comments
     
-    # Transfer data to PostgreSQL
-    transfer_data_to_postgresql(pg_conn, df)
+    # Replace 'Na' with NULL (case-sensitive)
+    sql_content = re.sub(r"'Na'", 'NULL', sql_content)
     
-    # Close the PostgreSQL connection
-    pg_conn.close()
-    print("Data transfer complete.")
+    # Remove or modify other SQLite specific syntax if necessary
+    # This part can be expanded depending on specific requirements or known differences
+    
+    with open(postgresql_sql_file, 'w') as file:
+        file.write(sql_content)
+        
 
-if __name__ == "__main__":
-    main()
+
+# Example usage
+sqlite_sql_file = 'GRCh38_indels_variant.sql'
+postgresql_sql_file = 'postgre_GRCh38_indels_variant.sql'
+
+modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file)

@@ -43,7 +43,7 @@ def main():
         'Rank', 'Term', 'P-value', 'Z-score', 'Combined Score', 'Genes', 'Adjusted P-value', 'Old P-value', 'Old Adjusted P-value'
     ])
     
-    results_df.to_csv("go_enrichment_results.csv", index=False)
+    results_df.to_csv("analysis/go_enrichment_results.csv", index=False)
     print("Enrichment results saved to go_enrichment_results.csv")
     
     #Combined Score=ln(P-value)×Z
@@ -57,7 +57,7 @@ def main():
     plt.title('Top 10 Enriched GO Terms')
     plt.gca().invert_yaxis()
     plt.tight_layout()
-    plt.savefig("top_enriched_go_terms.png")
+    plt.savefig("analysis/figures/top_enriched_go_terms.png")
     plt.show()
 
 if __name__ == "__main__":

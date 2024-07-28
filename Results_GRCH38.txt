@@ -1,0 +1,89 @@
+Total number of rows: 30483
+Metrics Summary:
+Total Genes: 7395
+Genes with AF Value: 1557
+Clinically Relevant Genes: 5591
+Green Flag Genes: 1061
+Total Transcripts: 10423
+Green Flag Transcripts: 3134
+
+Total number of transcripts: 10423
+Number of transcripts involved in clinically relevant genes (Green flag only): 3134
+Clinical relevant genes with rare indels 74
+Genes with 'Green' clinical relevance and AF values below 0.01: ['MSH4,RABGGTB' 'DRAM2' 'ADAR,CHRNB2' 'TRIM46,MUC1' 'GLUL' 'KIDINS220'
+ 'SPRED2' 'CD8A' 'ZEB2' 'STAT1' 'NDUFS1,ENSG00000231955' 'ANO10'
+ 'GPX1,RHOA' 'WNT5A' 'PROK2' 'CBLB' 'POGLUT1,TIMMDC1-DT,TIMMDC1'
+ 'LNCSRLR,ENSG00000243415,PLOD2' 'P3H2' 'UGDH' 'UBA6-DT,GNRHR' 'NAF1'
+ 'IRF2' 'ENSG00000290510,ENSG00000251250,ENSG00000205976' 'SMN2' 'ARSB'
+ 'ENSG00000289726,GMCL2' 'ENSG00000291112,ZNF204P' 'TAF8' 'POLH,GTPBP2'
+ 'PDE10A' 'ACTB' 'SFRP4' 'CASP2' 'RHEB' 'ERI1'
+ 'MIR486-1,ANK1,ENSG00000253389,MIR486-2' 'PLAG1' 'ASPH'
+ 'PMP2,ENSG00000253859' 'RSPO2,ENSG00000287949' 'B4GALT1' 'FBP1,PCAT7'
+ 'FANCC,AOPEP' 'CNTRL,RAB14' 'PALD1,PRF1' 'ATAD1'
+ 'SNORA12,CHUK,CHUK-DT,CWF19L1' 'DDB2,ACP2' 'MYBPC3,SPI1' 'GRIN2B'
+ 'ETFRF1,ENSG00000274987,KRAS' 'ADCY6' 'PPP1R12A-AS2,PPP1R12A'
+ 'ENSG00000243008,TPTE2P6' 'MAX' 'THUMPD1,ACSM3,ENSG00000283399'
+ 'PDXDC2P-NPIPB14P,PDXDC2P' 'ENSG00000260612,AP1G1' 'PER1,VAMP2' 'NEUROD2'
+ 'ENSG00000279792,XYLT2' 'ENSG00000279273,NPTX1'
+ 'ENSG00000279273,NPTX1,ENSG00000290024' 'NARS1' 'LMAN1' 'LDLR,SPC24'
+ 'FBXW9,TNPO2' 'CRTC1,COMP' 'NAPB,GZF1' 'LINC01426,RUNX1' 'KCNJ6' 'BCRP6'
+ 'ENSG00000290449,ENSG00000290920,CCDC188BP']
+
+
+
+
+MAPT (Microtubule-Associated Protein Tau)
+
+Clinical Relevance: Mutations in the MAPT gene are associated with neurodegenerative disorders, including Alzheimer's disease and frontotemporal dementia.
+Function: This gene encodes the tau protein, which stabilizes microtubules in neurons. Abnormal tau protein aggregation is linked to several neurodegenerative diseases.
+NPTX1 (Neuronal Pentraxin 1)
+
+Clinical Relevance: NPTX1 has been implicated in neurological disorders and is thought to play a role in synaptic plasticity and neurodevelopmental processes.
+Function: The protein encoded by this gene is involved in synaptic plasticity, helping to regulate synapse formation and maintenance.
+ANK1 (Ankyrin 1)
+
+Clinical Relevance: Mutations in ANK1 are associated with hereditary spherocytosis, a condition that affects red blood cells and can cause anemia.
+Function: Ankyrin proteins link integral membrane proteins to the cytoskeleton, maintaining cell shape and stability, particularly in red blood cells.
+MEN1 (Menin 1)
+
+Clinical Relevance: Mutations in MEN1 cause multiple endocrine neoplasia type 1 (MEN1), a disorder characterized by tumors in endocrine glands.
+Function: MEN1 encodes the protein menin, a tumor suppressor involved in transcriptional regulation, DNA repair, and cell proliferation control.
+BRCA1 (Breast Cancer 1)
+
+Clinical Relevance: BRCA1 mutations significantly increase the risk of breast and ovarian cancers. It is a critical gene in hereditary breast and ovarian cancer syndromes.
+Function: BRCA1 is involved in DNA repair, cell cycle checkpoint control, and maintaining genomic stability. It acts as a tumor suppressor gene.
+GALNT2 (Polypeptide N-Acetylgalactosaminyltransferase 2)
+
+Clinical Relevance: Variations in GALNT2 have been linked to lipid metabolism disorders and cardiovascular diseases.
+Function: GALNT2 is involved in the O-glycosylation of proteins, which is crucial for protein function, stability, and cell signaling.
+
+
+
+
+brief overview of each gene, including its clinical relevance and primary functions:
+
+MAPT (Microtubule-Associated Protein Tau)
+
+Clinical Relevance: Mutations in the MAPT gene are associated with neurodegenerative disorders, including Alzheimer's disease and frontotemporal dementia.
+Function: This gene encodes the tau protein, which stabilizes microtubules in neurons. Abnormal tau protein aggregation is linked to several neurodegenerative diseases.
+NPTX1 (Neuronal Pentraxin 1)
+
+Clinical Relevance: NPTX1 has been implicated in neurological disorders and is thought to play a role in synaptic plasticity and neurodevelopmental processes.
+Function: The protein encoded by this gene is involved in synaptic plasticity, helping to regulate synapse formation and maintenance.
+ANK1 (Ankyrin 1)
+
+Clinical Relevance: Mutations in ANK1 are associated with hereditary spherocytosis, a condition that affects red blood cells and can cause anemia.
+Function: Ankyrin proteins link integral membrane proteins to the cytoskeleton, maintaining cell shape and stability, particularly in red blood cells.
+MEN1 (Menin 1)
+
+Clinical Relevance: Mutations in MEN1 cause multiple endocrine neoplasia type 1 (MEN1), a disorder characterized by tumors in endocrine glands.
+Function: MEN1 encodes the protein menin, a tumor suppressor involved in transcriptional regulation, DNA repair, and cell proliferation control.
+BRCA1 (Breast Cancer 1)
+
+Clinical Relevance: BRCA1 mutations significantly increase the risk of breast and ovarian cancers. It is a critical gene in hereditary breast and ovarian cancer syndromes.
+Function: BRCA1 is involved in DNA repair, cell cycle checkpoint control, and maintaining genomic stability. It acts as a tumor suppressor gene.
+GALNT2 (Polypeptide N-Acetylgalactosaminyltransferase 2)
+
+Clinical Relevance: Variations in GALNT2 have been linked to lipid metabolism disorders and cardiovascular diseases.
+Function: GALNT2 is involved in the O-glycosylation of proteins, which is crucial for protein function, stability, and cell signaling.
+

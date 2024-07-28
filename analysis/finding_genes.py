@@ -77,7 +77,7 @@ def main():
     gene_counts_df = get_clinically_relevant_gene_counts(db_path)
 
     print(gene_counts_df.head(10))  # Display top 10 genes for brevity
-    gene_counts_df.to_csv("green_clinically_relevant_gene_counts.csv", index=False)  # Save the full list to a CSV file
+    gene_counts_df.to_csv("analysis/green_clinically_relevant_gene_counts.csv", index=False)  # Save the full list to a CSV file
     
         # Fetch data from the database
     df = fetch_data(db_path)
@@ -112,13 +112,4 @@ if __name__ == "__main__":
 
  
 
-# Metrics Summary:
-# Total Genes: 7395
-# Genes with AF Value: 30483
-# Clinically Relevant Genes: 7395
-# Green Flag Genes: 1061
-# Total Transcripts: 10423
-# Green Flag Transcripts: 3134
 
-# Total number of transcripts: 10423
-# Number of transcripts involved in clinically relevant genes (Green flag only): 3134

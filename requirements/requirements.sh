@@ -4,3 +4,9 @@ pip install sqlite3
 
 ## For testing 
 pip install pytest
+sudo apt update
+
+
+pip install biopython
+pip install bcbio-gff
+

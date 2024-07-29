@@ -1,6 +1,6 @@
-import csv
+import pandas as pd
 
-def extract_exons_from_gff(gff_file, output_csv):
+def extract_exons_from_gff(gff_file):
     exons = []
 
     with open(gff_file, 'r') as gff:
@@ -37,11 +37,11 @@ def extract_exons_from_gff(gff_file, output_csv):
                 
                 exons.append([seqid, start, end, gene_id, transcript_id, exon_id])
 
-    # Write to CSV
-    with open(output_csv, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['Chromosome', 'Start', 'End', 'Gene ID', 'Transcript ID', 'Exon ID'])
-        writer.writerows(exons)
+    # Create a pandas DataFrame
+    exons_df = pd.DataFrame(exons, columns=['Chromosome', 'Start', 'End', 'Gene ID', 'Transcript ID', 'Exon ID'])
+    return exons_df
 
 # Example usage:
-extract_exons_from_gff('gff_data/GCF_000001405.40-RS_2023_03_genomic.gff', 'exons.csv')
+exons_df = extract_exons_from_gff('gff_data/GCF_000001405.40-RS_2023_03_genomic.gff')
+exons_df.to_csv("main/exons.csv")
+print(exons_df.head())

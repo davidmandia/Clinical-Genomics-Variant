@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VCF Variant Analysis - University of Manchester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        header {
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://th.bing.com/th?id=OIP.AE9G3lubpeD4yrM67mpkegHaE8&w=306&h=204&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2" alt="University of Manchester" width="250">
+        <h1>VCF Variant Analysis Tool - David Mandia</h1>
+        <p>This tool allows you to submit VCF (Variant Call Format) data for analysis. It compares submitted variants against our database to identify clinically relevant false variants.</p>
+    </header>
+
+        <textarea id="vcfData" placeholder="Paste VCF data here. Example format: #CHROM  POS     ID      REF     ALT"></textarea><br>
+        <button type="button" onclick="submitVCF()">Submit</button>
+    </form>
+    <div class="results" id="results">
+        <h2>Results</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Chromosome</th>
+                    <th>Position</th>
+                    <th>Reference</th>
+                    <th>Alternate</th>
+                    <th>Gene</th>
+                    <th>AF</th>
+                    <th>Clinical Label</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Results will be appended here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="text-align: center;">
+        <h2>System Workflow</h2>
+    <img src="https://rp2clinicalgenomicsdavidmandia.s3.eu-north-1.amazonaws.com/schema2.png" alt="Workflow Diagram" style="max-width: 500px; height: auto;">
+</div>
+    <footer>
+        
+        <p>University of Manchester - Clinical Genomics Research Group</p>
+        <p>Feel free to email me for any question: <a href="mailto:david.mandia@yahoo.com">david.mandia@yahoo.com</a></p>
+        <p>Source code available on GitHub: <a href="https://github.com/davidmandia/Clinical-Genomics-Variant" target="_blank">https://github.com/davidmandia/Clinical-Genomics-Variant</a></p>
+
+    </footer>
+    <script>
+        function submitVCF() {
+            var vcfData = document.getElementById("vcfData").value;
+            var resultsDiv = document.getElementById("results");
+            var resultsTable = document.getElementById("resultsTable").getElementsByTagName('tbody')[0];
+            resultsTable.innerHTML = ''; // Clear previous results
+
+            var lines = vcfData.split('\n');
+            function processLine(i) {
+                if (i >= lines.length) return; // Stop when done
+
+                var line = lines[i].trim();
+                if (line.startsWith('#') || line === '') {
+                    processLine(i + 1);
+                    return;
+                }
+
+                var fields = line.split(/\s+/);
+                if (fields.length < 5) {
+                    resultsTable.innerHTML += `<tr><td colspan='7'>Invalid VCF format on line ${i + 1}</td></tr>`;
+                    processLine(i + 1);
+                    return;
+                }
+
+                var chrom = fields[0];
+                var pos = fields[1];
+                var ref = fields[3];
+                var alt = fields[4];
+
+                var apiURL = 'https://rlmjmeogu7.execute-api.us-east-1.amazonaws.com/default/Run_vcf';
+                var requestBody = {
+                    chrom: chrom,
+                    pos: pos,
+                    ref: ref,
+                    alt: alt
+                };
+
+                fetch(apiURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (typeof data.body === 'string') {
+                        data = JSON.parse(data.body);
+                    }
+
+                    if (data.expected_variations && data.expected_variations.length > 0) {
+                        var expected = data.expected_variations[0];
+                        var gene = expected.affected_gene || 'N/A';
+                        var af = (expected.gnomad_data && expected.gnomad_data.af !== null) ? expected.gnomad_data.af : 'N/A';
+                        var clinical_label = expected.clinical_label || 'N/A';
+
+                        resultsTable.innerHTML += `<tr>
+                            <td>${chrom}</td>
+                            <td>${pos}</td>
+                            <td>${ref}</td>
+                            <td>${alt}</td>
+                            <td>${gene}</td>
+                            <td>${af}</td>
+                            <td>${clinical_label}</td>
+                        </tr>`;
+                    } else {
+                        resultsTable.innerHTML += `<tr><td colspan='7'>No expected variations for line ${i + 1}</td></tr>`;
+                    }
+                    processLine(i + 1);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsTable.innerHTML += `<tr><td colspan='7'>Error processing line ${i + 1}: ${error.message}</td></tr>`;
+                    processLine(i + 1);
+                });
+            }
+
+            processLine(0);
+        }
+    </script>
+</body>
+</html>

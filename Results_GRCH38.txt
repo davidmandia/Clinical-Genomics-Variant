@@ -87,3 +87,30 @@ GALNT2 (Polypeptide N-Acetylgalactosaminyltransferase 2)
 Clinical Relevance: Variations in GALNT2 have been linked to lipid metabolism disorders and cardiovascular diseases.
 Function: GALNT2 is involved in the O-glycosylation of proteins, which is crucial for protein function, stability, and cell signaling.
 
+
+
+## Results GRCh37
+        Gene  Count
+4   B3GALNT2      8
+3       TBCE      8
+24    SCARF2      6
+25    PLXNA3      5
+16   SLC37A4      5
+19     NPRL3      5
+22     USH1G      4
+9     IQSEC1      3
+13       ABO      3
+0     VPS13D      2
+Total number of rows: 2378
+Metrics Summary:
+Total Genes: 396
+Genes with AF Value: 151
+Clinically Relevant Genes: 346
+Green Flag Genes: 26
+Total Transcripts: 1132
+Green Flag Transcripts: 47
+
+Total number of transcripts: 1132
+Number of transcripts involved in clinically relevant genes (Green flag only): 47
+Clinical relevant genes with rare indels 0
+Genes with 'Green' clinical relevance and AF values below 0.01: []

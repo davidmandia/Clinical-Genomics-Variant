@@ -34,7 +34,7 @@ def query_database(db_path):
     print("\n")
 
     #Execute a SELECT * query for rows where clinical label is different from "No Data"
-    cursor.execute("SELECT * FROM variants WHERE clinical_label != 'No Data';")
+    cursor.execute("SELECT * FROM variants WHERE clinical_label != 'No Data' LIMIT 10;")
     rows = cursor.fetchall()
 
     # Get column names
@@ -51,7 +51,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "sample_37_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh37_indels_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

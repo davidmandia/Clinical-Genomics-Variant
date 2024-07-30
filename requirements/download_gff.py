@@ -7,9 +7,15 @@ import os
 def download_and_extract_gff(url, output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-
-    gff_gz_path = os.path.join(output_dir, "GCF_000001405.40-RS_2023_03_genomic.gff.gz")
-    gff_path = os.path.join(output_dir, "GCF_000001405.40-RS_2023_03_genomic.gff")
+    
+    if "GRCh38" in url:
+        genome_version = "GRCh38"
+        gff_gz_path = os.path.join(output_dir, "GCF_000001405.40-RS_2023_03_genomic.gff.gz")
+        gff_path = os.path.join(output_dir, "GCF_000001405.40-RS_2023_03_genomic.gff")
+    elif "GRCh37" in url:
+        genome_version = "GRCh37"
+        gff_gz_path = os.path.join(output_dir, "GCF_000001405.25_GRCh37.p13_genomic.gff.gz")
+        gff_path = os.path.join(output_dir, "GCF_000001405.25_GRCh37.p13_genomic.gff")
 
     # Download the file
     response = requests.get(url, stream=True)

@@ -20,17 +20,17 @@ It covers the extraction of data from transcriptome sequences, variant identific
 - **Tools Used**: BLAST, Ensembl VEP
 - **Process**:
   - **Alignment**: Align raw transcriptome sequences to a reference genome using BLAST or other alignment tools.
-  - **Variant Calling**: Identify indels (insertions and deletions) using variant calling tools like GATK. Generate VCF (Variant Call Format) files as the output, containing variant information such as chromosome, position, reference, and alternate sequences.
+  - **Variant Calling**: Identify indels (insertions and deletions). Verify transcriptomic position and genomic position.  Generate VCF (Variant Call Format) files as the output, containing variant information such as chromosome, position, reference, and alternate sequences.
 
 ##### **3.2. Extracting VCF Data**
 
-- **Tools Used**: Python, VCF Parser libraries
+- **Tools Used**: Python, Ensembl VEP
 - **Process**:
-  - Parse VCF files to extract essential variant fields including chromosome, position, reference allele, alternate allele, quality metrics, and filter status.
+  - Parse VCF files to extract essential variant fields including chromosome, position, reference allele, alternate allele and use them to retireve variant consequences from Ensembl VEP
 
 ##### **3.3. Extracting gnomAD Data**
 
-- **Tools Used**: Python, gnomAD API 
+- **Tools Used**: Python, Ensembl VEP
 - **Process**:
   - Extract allele frequency data for each variant across different populations, which helps in assessing the commonality of the variant.
   - Populations include general population(af), nfe (Non-Finnish European), eas( East Asian), afr (African)

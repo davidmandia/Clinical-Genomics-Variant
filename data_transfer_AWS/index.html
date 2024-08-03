@@ -145,13 +145,13 @@
                             <td>${transcript}</td>
                         </tr>`;
                     } else {
-                        resultsTable.innerHTML += `<tr><td colspan='7'>No expected variations for line ${i + 1}</td></tr>`;
+                        resultsTable.innerHTML += `<tr><td colspan='8'>No expected variations for line ${i + 1}</td></tr>`;
                     }
                     processLine(i + 1);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    resultsTable.innerHTML += `<tr><td colspan='7'>Error processing line ${i + 1}: ${error.message}</td></tr>`;
+                    resultsTable.innerHTML += `<tr><td colspan='8'>Error processing line ${i + 1}: ${error.message}</td></tr>`;
                     processLine(i + 1);
                 });
             }

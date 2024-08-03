@@ -100,8 +100,16 @@ def main():
     # Convert the 'af' column to numeric, forcing errors to NaN (for safe conversion)
     df['af_numeric'] = pd.to_numeric(df['af'], errors='coerce')
     
+    print("columns", df.columns)
     # Filter the genes to include only those with AF values below 0.01
-    green_clinically_relevant_genes_with_af_below_001 = df[(df['clinical_label'] == "Green") & (df['af_numeric'] < 0.01)]['genes'].unique()
+    #green_clinically_relevant_genes_with_af_below_001 = df[(df['clinical_label'] == "Green") & (df['af_numeric'] < 0.01)][['genes', 'transcript']].drop_duplicates().apply(tuple, axis=1).tolist()
+    
+    # Extract the genes and transcripts based on the criteria
+    green_clinically_relevant_genes_with_af_below_001 = df[
+        (df['clinical_label'] == "Green") & 
+        (df['af_numeric'] < 0.01)
+    ][['genes', 'transcript_ref']].drop_duplicates().apply(tuple, axis=1).tolist()
+    
     
     print("Clinical relevant genes with rare indels", len(green_clinically_relevant_genes_with_af_below_001))
     print("Genes with 'Green' clinical relevance and AF values below 0.01:", green_clinically_relevant_genes_with_af_below_001)

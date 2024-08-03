@@ -96,7 +96,7 @@
 
                 var fields = line.split(/\s+/);
                 if (fields.length < 5) {
-                    resultsTable.innerHTML += `<tr><td colspan='7'>Invalid VCF format on line ${i + 1}</td></tr>`;
+                    resultsTable.innerHTML += `<tr><td colspan='8'>Invalid VCF format on line ${i + 1}</td></tr>`;
                     processLine(i + 1);
                     return;
                 }

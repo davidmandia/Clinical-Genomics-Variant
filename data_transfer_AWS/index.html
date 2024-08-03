@@ -130,6 +130,7 @@
                         var gene = expected.affected_gene || 'N/A';
                         var af = (expected.gnomad_data && expected.gnomad_data.af !== null) ? expected.gnomad_data.af : 'N/A';
                         var clinical_label = expected.clinical_label || 'N/A';
+                        var transcript = expected.transcript
 
                         resultsTable.innerHTML += `<tr>
                             <td>${chrom}</td>
@@ -139,6 +140,7 @@
                             <td>${gene}</td>
                             <td>${af}</td>
                             <td>${clinical_label}</td>
+                            <td>${transcript}</td>
                         </tr>`;
                     } else {
                         resultsTable.innerHTML += `<tr><td colspan='7'>No expected variations for line ${i + 1}</td></tr>`;

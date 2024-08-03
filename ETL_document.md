@@ -1,5 +1,95 @@
 ### ETL Document for Clinical Genomics Variant Database
 
+### Complete Database 
+A brief explanation of each column:
+
+1. **chrom**
+   - The chromosome number where the variant is located.
+
+2. **pos**
+   - The position of the variant on the chromosome.
+
+3. **ref**
+   - The reference allele at the variant position.
+
+4. **alt**
+   - The alternative allele that is different from the reference allele at the variant position.
+
+5. **qual**
+   - The quality score assigned to the variant, indicating the confidence in the variant call.
+
+6. **filter**
+   - Information about whether the variant passed certain quality control filters.
+
+7. **genomic_ref**
+   - Reference sequence identifier for the genomic reference used.
+
+8. **operation**
+   - The type of variant operation, such as insertion, deletion, or substitution.
+
+9. **transcript_ref**
+   - Reference sequence identifier for the transcript used.
+
+10. **transcript_pos**
+    - The position of the variant within the transcript.
+
+11. **af**
+    - Allele frequency of the variant in the gnomAD database.
+
+12. **af_eas**
+    - Allele frequency of the variant in the East Asian population.
+
+13. **af_nfe**
+    - Allele frequency of the variant in the Non-Finnish European population.
+
+14. **af_fin**
+    - Allele frequency of the variant in the Finnish population.
+
+15. **af_amr**
+    - Allele frequency of the variant in the Latino/Admixed American population.
+
+16. **af_afr**
+    - Allele frequency of the variant in the African/African American population.
+
+17. **af_asj**
+    - Allele frequency of the variant in the Ashkenazi Jewish population.
+
+18. **af_oth**
+    - Allele frequency of the variant in other or mixed populations.
+
+19. **af_sas**
+    - Allele frequency of the variant in the South Asian population.
+
+20. **af_mid**
+    - Allele frequency of the variant in the Middle Eastern population.
+
+21. **af_ami**
+    - Allele frequency of the variant in the Amish population.
+
+22. **genes**
+    - List of genes affected by the variant.
+
+23. **consequences**
+    - Predicted consequences of the variant on the gene(s) and transcript(s), such as missense, nonsense, or frameshift.
+
+24. **existing_variant**
+    - Indicates if the variant is already known or previously reported.
+
+25. **gene_symbol**
+    - The official symbol of the gene(s) affected by the variant.
+
+26. **gene_id**
+    - The unique identifier for the gene(s) affected by the variant.
+
+27. **clinically_relevant**
+    - Indicates whether the variant has clinical relevance.
+
+28. **clinical_label**
+    - The clinical significance or label assigned to the variant, such as pathogenic, benign, or uncertain significance.
+
+29. **exon_id**
+    - Identifier for the exon affected by the variant, if applicable.
+
 #### **1. Overview**
 
 This ETL process describes the comprehensive steps taken to create a clinical genomics variant database. The final database contains the varaint information( chrom number, position, ref, alt) of indels varaints found in the reference transcritpme alignment.
@@ -7,11 +97,16 @@ It covers the extraction of data from transcriptome sequences, variant identific
 
 #### **2. Data Sources**
 
-1. **Transcriptome Sequences**: RefSeq transcriptme alignment to genome builds GRCh37 and GRCH38 
+1. **Transcriptome Sequences**: RefSeq transcriptme alignment to genome builds GRCh37 and GRCH38 (Downloaded the bam.gz files)
+     - Link to GRCH38 file  Index of https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/historical/GRCh38/GCF_000001405.40-RS_2023_03_historical/ 
+     - Link To GRCh37 file  Index of https://ftp.ncbi.nlm.nih.gov/genomes/all/annotation_releases/9606/105.20201022/GCF_000001405.25_GRCh37.p13/RefSeq_transcripts_alignments/
 2. **Blast DB**: Blast NCBI command line tool to retrieve reference sequence for the VCF
+     - Link to tool instruction https://www.ncbi.nlm.nih.gov/books/NBK279690/  
 3. **gnomAD Database**: Allele frequency data across various populations.
+     - Link to Ensembl VEP APi for gnomad data and variant consequences https://rest.ensembl.org/ 
 4. **GFF Files**: Annotation files for gene and exon structures.
 5. **PanelApp**: Clinical relevance and disease association data.
+     - PanelApp link for API https://panelapp.genomicsengland.co.uk/api/docs/
 
 #### **3. Extract Phase**
 

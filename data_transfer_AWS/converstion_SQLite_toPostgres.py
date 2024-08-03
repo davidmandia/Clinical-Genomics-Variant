@@ -17,6 +17,7 @@ def modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file):
     
     # Replace 'Na' with NULL (case-sensitive)
     sql_content = re.sub(r"'Na'", 'NULL', sql_content)
+    sql_content = re.sub(r'\bCREATE TABLE variants\b', 'CREATE TABLE variant_GRCH37', sql_content, flags=re.IGNORECASE)
     
     # Remove or modify other SQLite specific syntax if necessary
     # This part can be expanded depending on specific requirements or known differences
@@ -27,7 +28,7 @@ def modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file):
 
 
 # Example usage
-sqlite_sql_file = 'GRCh38_indels_variant.sql'
-postgresql_sql_file = 'postgre_GRCh38_indels_variant.sql'
+sqlite_sql_file = "data_transfer_AWS/GRCh37_indels_variant.sql" 
+postgresql_sql_file = 'data_transfer_AWS/postgre_GRCh37_indels_variant.sql'
 
 modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file)

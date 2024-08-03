@@ -32,6 +32,9 @@
             margin-top: 20px;
             text-align: center;
         }
+        .assembly-select {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -40,7 +43,14 @@
         <h1>VCF Variant Analysis Tool - David Mandia</h1>
         <p>This tool allows you to submit VCF (Variant Call Format) data for analysis. It compares submitted variants against our database to identify clinically relevant false variants.</p>
     </header>
-
+    <form id="vcfForm">
+        <div class="assembly-select">
+            <label for="assembly">Choose assembly:</label>
+            <select id="assembly">
+                <option value="GRCh38">GRCh38 (default)</option>
+                <option value="GRCh37">GRCh37</option>
+            </select>
+        </div>
         <textarea id="vcfData" placeholder="Paste VCF data here. Example format: #CHROM  POS     ID      REF     ALT"></textarea><br>
         <button type="button" onclick="submitVCF()">Submit</button>
     </form>
@@ -57,7 +67,6 @@
                     <th>AF</th>
                     <th>Clinical Label</th>
                     <th>Transcript</th>
-                    
                 </tr>
             </thead>
             <tbody>
@@ -65,21 +74,19 @@
             </tbody>
         </table>
     </div>
-    
     <div style="text-align: center;">
         <h2>System Workflow</h2>
-    <img src="https://rp2clinicalgenomicsdavidmandia.s3.eu-north-1.amazonaws.com/website/schema2.png" alt="Workflow Diagram" style="max-width: 500px; height: auto;">
-</div>
+        <img src="https://rp2clinicalgenomicsdavidmandia.s3.eu-north-1.amazonaws.com/website/schema2.png" alt="Workflow Diagram" style="max-width: 500px; height: auto;">
+    </div>
     <footer>
-        
         <p>University of Manchester - Clinical Genomics Research Group</p>
         <p>Feel free to email me for any question: <a href="mailto:david.mandia@yahoo.com">david.mandia@yahoo.com</a></p>
         <p>Source code available on GitHub: <a href="https://github.com/davidmandia/Clinical-Genomics-Variant" target="_blank">https://github.com/davidmandia/Clinical-Genomics-Variant</a></p>
-
     </footer>
     <script>
         function submitVCF() {
             var vcfData = document.getElementById("vcfData").value;
+            var assembly = document.getElementById("assembly").value;
             var resultsDiv = document.getElementById("results");
             var resultsTable = document.getElementById("resultsTable").getElementsByTagName('tbody')[0];
             resultsTable.innerHTML = ''; // Clear previous results
@@ -111,7 +118,8 @@
                     chrom: chrom,
                     pos: pos,
                     ref: ref,
-                    alt: alt
+                    alt: alt,
+                    assembly: assembly
                 };
 
                 fetch(apiURL, {
@@ -132,7 +140,7 @@
                         var gene = expected.affected_gene || 'N/A';
                         var af = (expected.gnomad_data && expected.gnomad_data.af !== null) ? expected.gnomad_data.af : 'N/A';
                         var clinical_label = expected.clinical_label || 'N/A';
-                        var transcript = expected.transcript
+                        var transcript = expected.transcript || 'N/A';
 
                         resultsTable.innerHTML += `<tr>
                             <td>${chrom}</td>

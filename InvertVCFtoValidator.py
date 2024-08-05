@@ -116,7 +116,7 @@ class process_vcf:
                     print(f'{seq} has no related variant')
                 else:
                     variant_judgement=transript.get('t_hgvs',{}).split(":")
-                    if variant_judgement[1][0]=="c":
+                    if variant_judgement[1][0]=="c":#only focus on the sequence with c
                         if transript.get('t_hgvs',{}).startswith('E'):
                             ensembl_variant.append(transript.get('t_hgvs',{}))
                         if transript.get('t_hgvs',{}).startswith('N'):

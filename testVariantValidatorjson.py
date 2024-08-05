@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, mock_open,call
 import json
+import io
+import requests
 from InvertVCFtoValidator import process_vcf  
 
 class TestProcessVCF(unittest.TestCase):
@@ -59,9 +61,10 @@ class TestProcessVCF(unittest.TestCase):
         expected_calls = {'GRCh37:1:1570922:T:TG', 'GRCh37:1:12570607:G:GTG', 'GRCh37:1:1594199:C:CT', 'GRCh37:1:7442597:T:TG'}
         # Use set comparison
         self.assertEqual(set(vcf_calls), expected_calls)
-            
+
+    @patch('sys.stdout', new_callable=io.StringIO)       
     @patch('requests.get')#mock response got from api
-    def test_query_API_lovd(self, mock_get):
+    def test_query_API_lovd(self, mock_get,mock_stdout):
         mock_response = {
         "1:1570922:T:TG": {
             "1:1570922:T:TG": {
@@ -176,7 +179,12 @@ class TestProcessVCF(unittest.TestCase):
         
         result = self.processor.query_API_lovd('GRCh37', '1:1570922:T:TG', transcript_model="all", select_transcripts="raw", checkonly="False", liftover="False")
         self.assertEqual(result, mock_response)
-        
+        mock_get.side_effect = requests.exceptions.HTTPError(
+            "500 Server Error: INTERNAL SERVER ERROR for url: https://rest.variantvalidator.org/LOVD/lovd/GRCh37/NW_003315937.1:12760:GGA:G/all/raw/False/False?content-type=application/json"
+        )
+        self.processor.query_API_lovd('GRCh37', 'NW_003315937.1:12760:GGA:G', transcript_model="all", select_transcripts="raw", checkonly="False", liftover="False")
+        self.assertEqual(mock_stdout.getvalue().strip(), "HTTP error occurred: 500 Server Error: INTERNAL SERVER ERROR for url: https://rest.variantvalidator.org/LOVD/lovd/GRCh37/NW_003315937.1:12760:GGA:G/all/raw/False/False?content-type=application/json")
+       
     def test_format_data(self):
         vcf_json = {
         "1:1570922:T:TG": {
@@ -300,7 +308,17 @@ class TestProcessVCF(unittest.TestCase):
             "ensembl": []
         }
     }
+        vcf_json2={
+        "error": "local variable 'result' referenced before assignment"
+        }
+        expected_output2={
+            "<NW_003315937.1:12760:GGA:G>": {
+                "refseq": [None],
+                "ensembl": [None]
+            }
+        }
         self.assertEqual(self.processor.format_data('1:1570922:T:TG', vcf_json), expected_output)
+        self.assertEqual(self.processor.format_data('NW_003315937.1:12760:GGA:G', vcf_json2), expected_output2)
     
     @patch('builtins.open', new_callable=mock_open)
     def test_write_to_lovdjson(self, mock_file):

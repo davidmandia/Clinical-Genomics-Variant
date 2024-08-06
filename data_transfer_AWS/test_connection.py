@@ -1,41 +1,57 @@
 import psycopg2
-import os
 
-# Database connection details
+# Connection details
 host = "clinical-variant.cjcmykm4g8ti.us-east-1.rds.amazonaws.com"
 port = "5432"
-database = "postgres"  # Replace with your database name
-user = "postgres"  # Replace with your username
-password = "admin123"  # Replace with your password
+database = "postgres"
+user = "postgres"
+password = "admin123"
 
-def delete_table():
+def fetch_and_print_table_data(connection, table_name, limit=5):
     try:
-        # Connect to your postgres DB
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            database=database,
-            user=user,
-            password=password
-        )
-
-        # Open a cursor to perform database operations
-        cursor = conn.cursor()
-
-        # Drop the table variant_grch37 if it exists
-        drop_table_query = "DROP TABLE IF EXISTS variants"
-        cursor.execute(drop_table_query)
-        print("Table variants deleted successfully")
-
-        # Commit the changes to the database
-        conn.commit()
-
-        # Close the cursor and connection
+        # Create a cursor object
+        cursor = connection.cursor()
+        
+        # Query to fetch the first 'limit' rows from the specified table
+        query = f"SELECT * FROM {table_name} LIMIT {limit};"
+        cursor.execute(query)
+        
+        # Fetch the results
+        rows = cursor.fetchall()
+        
+        # Print the column names
+        column_names = [desc[0] for desc in cursor.description]
+        print(f"Columns in {table_name}: {', '.join(column_names)}")
+        
+        # Print the rows
+        print(f"First {limit} rows from {table_name}:")
+        for row in rows:
+            print(row)
+        
+        # Close the cursor
         cursor.close()
-        conn.close()
-
+        
     except Exception as error:
-        print(f"Error deleting table: {error}")
+        print(f"Error fetching data from {table_name}: {error}")
 
-# Run the delete_table function
-delete_table()
+try:
+    # Establishing the connection
+    connection = psycopg2.connect(
+        host=host,
+        port=port,
+        database=database,
+        user=user,
+        password=password
+    )
+    
+    # Fetch and print data from 'variants' table
+    fetch_and_print_table_data(connection, "variants")
+    
+    # Fetch and print data from 'variant_GRCH37' table
+    fetch_and_print_table_data(connection, "variant_GRCH37")
+    
+    # Close the connection
+    connection.close()
+    
+except Exception as error:
+    print(f"Error while connecting to PostgreSQL: {error}")

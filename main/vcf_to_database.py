@@ -194,7 +194,7 @@ def process_results_and_insert(results, original_variants, db_name):
         else:
             gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']   
 
-        gnomad_values = [frequencies.get(field, "Na") for field in gnomad_fields]
+        gnomad_values = [frequencies.get(field, None ) for field in gnomad_fields]
         
         insert_data.append((
             original_variant['chrom'],

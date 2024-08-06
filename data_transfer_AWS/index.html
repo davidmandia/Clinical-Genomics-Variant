@@ -67,6 +67,7 @@
                     <th>AF</th>
                     <th>Clinical Label</th>
                     <th>Transcript</th>
+                    <th>Exons</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,7 +104,7 @@
 
                 var fields = line.split(/\s+/);
                 if (fields.length < 5) {
-                    resultsTable.innerHTML += `<tr><td colspan='8'>Invalid VCF format on line ${i + 1}</td></tr>`;
+                    resultsTable.innerHTML += `<tr><td colspan='9'>Invalid VCF format on line ${i + 1}</td></tr>`;
                     processLine(i + 1);
                     return;
                 }
@@ -141,6 +142,7 @@
                         var af = (expected.gnomad_data && expected.gnomad_data.af !== null) ? expected.gnomad_data.af : 'N/A';
                         var clinical_label = expected.clinical_label || 'N/A';
                         var transcript = expected.transcript || 'N/A';
+                        var exons = expected.exons || 'N/A';
 
                         resultsTable.innerHTML += `<tr>
                             <td>${chrom}</td>
@@ -151,15 +153,16 @@
                             <td>${af}</td>
                             <td>${clinical_label}</td>
                             <td>${transcript}</td>
+                            <td>${exons}</td>
                         </tr>`;
                     } else {
-                        resultsTable.innerHTML += `<tr><td colspan='8'>No expected variations for line ${i + 1}</td></tr>`;
+                        resultsTable.innerHTML += `<tr><td colspan='9'>No expected variations for line ${i + 1}</td></tr>`;
                     }
                     processLine(i + 1);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    resultsTable.innerHTML += `<tr><td colspan='8'>Error processing line ${i + 1}: ${error.message}</td></tr>`;
+                    resultsTable.innerHTML += `<tr><td colspan='9'>Error processing line ${i + 1}: ${error.message}</td></tr>`;
                     processLine(i + 1);
                 });
             }

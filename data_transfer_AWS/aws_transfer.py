@@ -21,6 +21,17 @@ try:
     
     # Create a cursor object
     cursor = connection.cursor()
+
+    # Print a message indicating that the connection was successful
+    print("Connected to the database.")
+    
+    # Drop the table if it exists
+    cursor.execute("DROP TABLE IF EXISTS variants;")
+    
+    # Commit the changes
+    connection.commit()
+    
+    print("Table variants deleted successfully.")
     
     # Open and read the SQL file
     with open(sql_file_path, 'r', encoding='utf-8') as file:
@@ -28,14 +39,22 @@ try:
     
     # Split the SQL content by semicolon to handle multiple queries
     sql_commands = sql_content.split(';')
+
+    # Wrap the execution in a transaction
+    cursor.execute("BEGIN;")
     
-    # Execute each SQL command separately
     for command in sql_commands:
         if command.strip():
-            cursor.execute(command)
-    
-    # Commit the changes
-    connection.commit()
+            try:
+                cursor.execute(command)
+            except Exception as e:
+                print(f"Error executing command: {command}")
+                print(f"Error message: {e}")
+                cursor.execute("ROLLBACK;")
+                raise e
+
+    # Commit the transaction
+    cursor.execute("COMMIT;")
     
     print("SQL file executed successfully.")
     

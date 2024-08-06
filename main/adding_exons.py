@@ -1,8 +1,9 @@
-import pandas as pd
 import sqlite3
+import pandas as pd
 
 # Load the exons data from the CSV file
 exons_df = pd.read_csv('main/exons.csv')
+
 # Connect to the SQLite database
 conn = sqlite3.connect('output/database/GRCh38_indels_variant.db')
 cursor = conn.cursor()
@@ -16,12 +17,30 @@ if 'exon_id' not in columns:
 # Index the columns used for matching if not already indexed
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_variants_chrom_pos ON variants (chrom, pos)")
 
+# Create the exons table and load data if not exists
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS exons (
+        Chromosome TEXT,
+        Start INTEGER,
+        End INTEGER,
+        Gene_ID TEXT,
+        Transcript_ID TEXT,
+        Exon_ID TEXT
+    )
+""")
+
+# Load exons data into the database for faster access if not already there
+exons_df.to_sql('exons', conn, if_exists='replace', index=False)
+
+# Create index on the exons table
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_exons_chrom_start_end ON exons (Chromosome, Start, End)")
+
 # Batch the updates
 batch_size = 1000
 updates = []
 
 # Fetch existing variants from the database
-variants_df = pd.read_sql_query("SELECT * FROM variants", conn)
+variants_df = pd.read_sql_query("SELECT chrom, pos FROM variants", conn)
 
 # Update each variant with matching exon information
 for index, variant in variants_df.iterrows():
@@ -29,9 +48,14 @@ for index, variant in variants_df.iterrows():
     pos = variant['pos']
     
     # Match on chromosome and position range
-    matching_exons = exons_df[(exons_df['Chromosome'] == chrom) & (exons_df['Start'] <= pos) & (exons_df['End'] >= pos)]
-    if not matching_exons.empty:
-        exon_ids = ','.join(matching_exons['Exon ID'].unique())
+    cursor.execute("""
+        SELECT "Exon ID" FROM exons 
+        WHERE Chromosome = ? AND Start <= ? AND End >= ?
+    """, (chrom, pos, pos))
+    
+    matching_exons = cursor.fetchall()
+    if matching_exons:
+        exon_ids = ','.join([exon[0] for exon in matching_exons])
         updates.append((exon_ids, chrom, pos))
         
         # Commit in batches

@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 import sqlite3
 import os
 import argparse
@@ -10,18 +11,7 @@ def read_database(db_path):
     conn.close()
     return df
 
-def print_database_columns(db_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA table_info(variants)")
-    columns = cursor.fetchall()
-    conn.close()
-    print("Columns in the database:")
-    for col in columns:
-        print(col[1])  # col[1] contains the column name
-
 def classify_indels(df, rare_threshold=0.01):
-    # Define populations based on the columns present in the database
     if "gnomadg" in df.columns:
         populations = [
             'gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 
@@ -34,9 +24,7 @@ def classify_indels(df, rare_threshold=0.01):
         return pd.DataFrame()
 
     available_populations = [pop for pop in populations if pop in df.columns]
-    #print("Available populations for analysis:", available_populations)
 
-    # Convert population frequency columns to numeric, forcing errors to NaN
     for pop in available_populations:
         df[pop] = pd.to_numeric(df[pop], errors='coerce')
 
@@ -45,7 +33,6 @@ def classify_indels(df, rare_threshold=0.01):
         return pd.DataFrame()
 
     rare_indels = df[df[available_populations].le(rare_threshold).any(axis=1)]
-
     return rare_indels
 
 def analyze_rare_indels(rare_indels, output_dir, db_name):
@@ -59,19 +46,24 @@ def analyze_rare_indels(rare_indels, output_dir, db_name):
     gene_counts = rare_indels['genes'].value_counts()
 
     top_genes = gene_counts.head(20)
-    plt.figure(figsize=(12, 8))
-    top_genes.plot(kind='bar', color='teal')
-    plt.title(f'Top 20 Genes Most Frequently Affected by Rare Indels in {db_name}')
-    plt.xlabel('Gene')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45, ha='right')
 
-    plt.table(cellText=top_genes.reset_index().values,
-              colLabels=['Gene', 'Count'],
-              cellLoc = 'center', loc='bottom', bbox=[0, -0.3, 1, 0.25])
+    plt.figure(figsize=(18, 10))
+    sns.barplot(x=top_genes.index, y=top_genes.values, palette="viridis")
+    plt.title(f'Top 20 Genes Most Frequently Affected by Rare Indels in {db_name}', fontsize=22)
+    plt.xlabel('Gene', fontsize=20)
+    plt.ylabel('Count', fontsize=20)
+    plt.xticks(rotation=45, ha='right', fontsize=18)
+    plt.yticks(fontsize=18)
+    
+    table_data = top_genes.reset_index().values
+    cell_text = []
+    for row in table_data:
+        cell_text.append([row[0], int(row[1])])
+
+    plt.table(cellText=cell_text, colLabels=['Gene', 'Count'], cellLoc='center', loc='right', bbox=[1.05, 0, 0.3, 1], edges='horizontal', fontsize=16)
 
     plt.tight_layout()
-    plt.savefig(f"{output_dir}/rare_indels_gene_counts.png")
+    plt.savefig(f"{output_dir}/rare_indels_{db_name}_gene_counts.png", bbox_inches='tight')
     plt.show()
 
 def main():

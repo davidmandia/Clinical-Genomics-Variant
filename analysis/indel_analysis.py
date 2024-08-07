@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import sqlite3
 import os
 import argparse
@@ -34,48 +35,63 @@ def indel_distribution_analysis(df, output_dir, db_name):
     chromosome_counts = df['chrom_int'].value_counts().sort_index()
 
     # Plotting
-    plt.figure(figsize=(12, 8))
+    sns.set(style="whitegrid")
+
+    fig, axs = plt.subplots(3, 1, figsize=(15, 18))
 
     # Plot frequency of Insertions vs. Deletions
-    plt.subplot(3, 1, 1)
-    indel_counts.plot(kind='bar', color=['blue', 'orange'])
-    plt.title('Frequency of Insertions vs. Deletions')
-    plt.xlabel('Indel Type')
-    plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_{db_name}frequency.png")
+    sns.barplot(x=indel_counts.index, y=indel_counts.values, ax=axs[0], palette='Blues', alpha=0.7)
+    axs[0].set_title('Frequency of Insertions vs. Deletions', fontsize=32, pad=20)
+    axs[0].set_xlabel('Indel Type', fontsize=28)
+    axs[0].set_ylabel('Count', fontsize=28)
+    axs[0].tick_params(axis='both', labelsize=24)
+    for p in axs[0].patches:
+        axs[0].annotate(format(p.get_height(), '.0f'), 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha = 'center', va = 'center', 
+                        xytext = (0, 9), 
+                        textcoords = 'offset points', fontsize=24)
 
     # Plot size distribution of Indels
-    plt.subplot(3, 1, 2)
-    indel_size_distribution.plot(kind='bar', color='green')
-    plt.title('Size Distribution of Indels')
-    plt.xlabel('Indel Size (bp)')
-    plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_{db_name}size_distribution.png")
+    sns.barplot(x=indel_size_distribution.index, y=indel_size_distribution.values, ax=axs[1], palette='Greens', alpha=0.7)
+    axs[1].set_title('Size Distribution of Indels', fontsize=32, pad=20)
+    axs[1].set_xlabel('Indel Size (bp)', fontsize=28)
+    axs[1].set_ylabel('Count', fontsize=28)
+    axs[1].tick_params(axis='both', labelsize=24)
+    for p in axs[1].patches:
+        axs[1].annotate(format(p.get_height(), '.0f'), 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha = 'center', va = 'center', 
+                        xytext = (0, 9), 
+                        textcoords = 'offset points', fontsize=24)
 
     # Plot indel frequencies across chromosomes
-    plt.subplot(3, 1, 3)
-    chromosome_counts.plot(kind='bar', color='purple')
-    plt.title('Indel Frequency Across Chromosomes')
-    plt.xlabel('Chromosome')
-    plt.ylabel('Count')
-    plt.savefig(f"{output_dir}/indel_{db_name}chromosome_frequency.png")
+    sns.barplot(x=chromosome_counts.index.astype(int).astype(str), y=chromosome_counts.values, ax=axs[2], palette='Purples', alpha=0.7)
+    axs[2].set_title('Indel Frequency Across Chromosomes', fontsize=32, pad=20)
+    axs[2].set_xlabel('Chromosome', fontsize=28)
+    axs[2].set_ylabel('Count', fontsize=28)
+    axs[2].tick_params(axis='both', labelsize=24)
+    for p in axs[2].patches:
+        axs[2].annotate(format(p.get_height(), '.0f'), 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha = 'center', va = 'center', 
+                        xytext = (0, 9), 
+                        textcoords = 'offset points', fontsize=24)
 
     plt.tight_layout(h_pad=3.0)
+    plt.savefig(f"{output_dir}/indel_{db_name}_distribution_analysis.png")
     plt.show()
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze gene frequency from a SQLite database.")
+    parser = argparse.ArgumentParser(description="Analyze indel distribution from a SQLite database.")
     parser.add_argument('db_path', help="Path to the SQLite database")
     args = parser.parse_args()
 
     db_path = args.db_path
-
     output_dir = "analysis/figures"
     os.makedirs(output_dir, exist_ok=True)
     
-    # Extract database name for labeling
     db_name = os.path.basename(db_path).replace('.db', '')
-
 
     df = read_database(db_path)
     indel_distribution_analysis(df, output_dir, db_name)

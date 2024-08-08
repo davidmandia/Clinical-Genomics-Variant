@@ -41,9 +41,13 @@ def compare_population_frequencies(df, output_dir, db_name):
     if not available_populations:
         print("No population frequency columns available for analysis.")
         return pd.DataFrame()
-    
+
     # Filter out rows with no frequency data across all population columns
     df_freq = df.dropna(subset=available_populations, how='all')
+
+    # Drop populations where all values are NaN
+    available_populations = [pop for pop in available_populations if df_freq[pop].notna().any()]
+    population_labels = [label for pop, label in zip(populations, population_labels) if pop in available_populations]
 
     # Debugging: Check for NaN values
     print("NaN values check:")

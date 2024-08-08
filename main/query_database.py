@@ -7,7 +7,7 @@ def remove_duplicates(cursor):
         WHERE rowid NOT IN (
             SELECT MIN(rowid)
             FROM variants
-            GROUP BY chrom, pos, ref, alt, transcript_ref
+            GROUP BY chrom, pos, ref, alt
         )
     ''')
 
@@ -15,7 +15,7 @@ def query_database(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    #remove_duplicates(cursor)
+    remove_duplicates(cursor)
 
     # Count total rows
     cursor.execute("SELECT COUNT(*) FROM variants")
@@ -34,7 +34,7 @@ def query_database(db_path):
     print("\n")
 
     #Execute a SELECT * query for rows where clinical label is different from "No Data"
-    cursor.execute("SELECT * FROM variants  WHERE af is not 'Na' LIMIT 10;")
+    cursor.execute("SELECT * FROM variants  WHERE af < 0.1 LIMIT 10;")
     rows = cursor.fetchall()
 
     # Get column names

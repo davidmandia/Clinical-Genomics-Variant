@@ -8,6 +8,29 @@ import multiprocessing
 from functools import partial
 import time
 
+
+def choose_best_rsid(colocated_variants):
+    """
+    Chooses the best rsID based on the available frequency data and annotations.
+
+    Args:
+        colocated_variants (list): List of colocated variants from the VEP API response.
+
+    Returns:
+        str: The chosen rsID.
+    """
+    best_rsid = None
+    best_frequency_count = 0
+
+    for variant in colocated_variants:
+        if 'frequencies' in variant:
+            frequency_count = len(variant['frequencies'])
+            if frequency_count > best_frequency_count:
+                best_frequency_count = frequency_count
+                best_rsid = variant['id']
+
+    return best_rsid
+
 def read_vcf_file(vcf_file):
     """
     Reads a VCF file and extracts variant information.
@@ -83,13 +106,16 @@ def parse_vep_data(variant_data):
     existing_variant = "Na"
     
     if 'colocated_variants' in variant_data:
-        for cv in variant_data['colocated_variants']:
-            if 'id' in cv:
-                existing_variant = cv['id']
+        for cv in variant_data['colocated_variants']:             
+                
             if 'frequencies' in cv:
+                #rsid is assigned to the best rsid based on the available frequency data and annotations
                 gnomad_fre = next(iter(cv["frequencies"].values()), {})
                 for pop, freq in gnomad_fre.items():
                     frequencies[pop] = freq
+                existing_variant = cv['id']
+            elif "frequencies" not in cv: # if best (frequency) not available, the rsid is assigned to the first rsid in the list
+                existing_variant = cv['id']
 
     if 'transcript_consequences' in variant_data:
         for tc in variant_data['transcript_consequences']:
@@ -126,9 +152,10 @@ def create_database(db_name):
     Args:
         db_name (str): The name of the SQLite database file.
     """
+
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS variants (
             chrom TEXT,
             pos INTEGER,
@@ -187,8 +214,10 @@ def process_results_and_insert(results, original_variants, db_name):
         genomic_ref = info_dict.get('GENOME_REF', '')  
         
         # Determine which gnomAD fields to use based on the presence of data
+        #for 1000 genomes project results in GRCh37
         if "af" in frequencies.keys():
-            gnomad_fields = ['af', 'af_eas', 'af_nfe', 'af_fin', 'af_amr', 'af_afr', 'af_asj', 'af_oth', 'af_sas', 'af_mid', 'af_ami']
+            gnomad_fields = ['af', 'eas', 'eur', 'af_fin', 'amr', 'afr', 'af_asj', 'af_oth', 'sas', 'af_mid', 'af_ami']
+        
         elif "gnomadg" in frequencies.keys():
             gnomad_fields = ['gnomadg', 'gnomadg_eas', 'gnomadg_nfe', 'gnomadg_fin', 'gnomadg_amr', 'gnomadg_afr', 'gnomadg_asj', 'gnomadg_oth', 'gnomadg_sas', 'gnomadg_mid', 'gnomadg_ami']
         else:

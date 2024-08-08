@@ -7,7 +7,7 @@ def remove_duplicates(cursor):
         WHERE rowid NOT IN (
             SELECT MIN(rowid)
             FROM variants
-            GROUP BY chrom, pos, ref, alt
+            GROUP BY chrom, pos, ref, alt, transcript_ref
         )
     ''')
 
@@ -15,7 +15,7 @@ def query_database(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    remove_duplicates(cursor)
+    #remove_duplicates(cursor)
 
     # Count total rows
     cursor.execute("SELECT COUNT(*) FROM variants")
@@ -34,7 +34,7 @@ def query_database(db_path):
     print("\n")
 
     #Execute a SELECT * query for rows where clinical label is different from "No Data"
-    cursor.execute("SELECT * FROM variants WHERE exon_id != 'None' LIMIT 10;")
+    cursor.execute("SELECT * FROM variants  WHERE af is not 'Na' LIMIT 10;")
     rows = cursor.fetchall()
 
     # Get column names
@@ -51,7 +51,7 @@ def query_database(db_path):
     conn.close()
 
 # Specify the path to your database
-db_name = "GRCh38_indels_variant.db"  # Replace with the database name you are querying
+db_name = "GRCh37_indels_variant.db"  # Replace with the database name you are querying
 output_dir = "output"
 dbs_dir = os.path.join(output_dir, "database")
 db_path = os.path.join(dbs_dir, db_name)

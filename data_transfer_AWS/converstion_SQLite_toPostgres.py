@@ -1,4 +1,6 @@
 import re
+import os
+import argparse
 
 def modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file):
     with open(sqlite_sql_file, 'r') as file:
@@ -8,29 +10,31 @@ def modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file):
     sql_content = re.sub(r'\bAUTOINCREMENT\b', '', sql_content, flags=re.IGNORECASE)
     
     # Replace TEXT with VARCHAR or keep as TEXT in PostgreSQL
-    # You can decide to convert TEXT to VARCHAR or keep as TEXT, below keeps as TEXT
     sql_content = re.sub(r'\bTEXT\b', 'VARCHAR', sql_content, flags=re.IGNORECASE)
-    # or you can leave TEXT as it is in PostgreSQL since it's compatible
+    
     # Remove or comment out PRAGMA statements and other SQLite specific syntax
     sql_content = re.sub(r'PRAGMA.*?;', '', sql_content, flags=re.IGNORECASE)
-    sql_content = re.sub(r'--.*?\\n', '', sql_content, flags=re.IGNORECASE)  # Remove comments
+    sql_content = re.sub(r'--.*?\n', '', sql_content, flags=re.IGNORECASE)  # Remove comments
     
     # Replace 'Na' with NULL (case-sensitive)
     sql_content = re.sub(r"'Na'", 'NULL', sql_content)
     
-    ## For GRCh37 uncomment line below 
-    #sql_content = re.sub(r'\bCREATE TABLE variants\b', 'CREATE TABLE variant_GRCH37', sql_content, flags=re.IGNORECASE)
-    
-    # Remove or modify other SQLite specific syntax if necessary
-    # This part can be expanded depending on specific requirements or known differences
+    # For GRCh37
+    if 'GRCh37' in sqlite_sql_file:
+        sql_content = re.sub(r'\bCREATE TABLE variants\b', 'CREATE TABLE variant_GRCH37', sql_content, flags=re.IGNORECASE)
     
     with open(postgresql_sql_file, 'w') as file:
         file.write(sql_content)
-        
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Convert SQLite SQL file to PostgreSQL compatible SQL file.")
+    parser.add_argument('sqlite_sql_file', help="Path to the input SQLite SQL file")
+    args = parser.parse_args()
 
-# Example usage
-sqlite_sql_file = "data_transfer_AWS/GRCh38_indels_variant.sql" 
-postgresql_sql_file = 'data_transfer_AWS/postgre_GRCh38_indels_variant.sql'
+    sqlite_sql_file = args.sqlite_sql_file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_filename = os.path.basename(sqlite_sql_file)
+    postgresql_sql_file = os.path.join(script_dir, f"postgre_{input_filename}")
 
-modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file)
+    modify_sqlite_to_postgresql(sqlite_sql_file, postgresql_sql_file)
+    print(f"Converted SQL file saved as {postgresql_sql_file}")

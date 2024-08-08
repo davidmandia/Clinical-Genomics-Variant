@@ -11,6 +11,7 @@ pip install pytest
 sqlite3 output/database/GRCh38_indels_variant.db .dump > data_transfer_AWS/GRCh38_indels_variant.sql
 pip install psycopg2
 
+sqlite3 output/database/GRCh37_indels_variant.db .dump > data_transfer_AWS/GRCh37_indels_variant.sql
 ## However, the conversion to csv , amend to Postgres, then deploy through CSV is way faster 
 
 # sqlite3 /workspaces/Clinical-Genomics-Variant/output/database/GRCh38_indels_variant.db <<EOF

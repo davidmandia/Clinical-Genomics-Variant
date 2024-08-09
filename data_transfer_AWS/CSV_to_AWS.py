@@ -1,11 +1,19 @@
 import psycopg2
+import configparser
+import os
 
-# Connection details
-host = "clinical-variant.cjcmykm4g8ti.us-east-1.rds.amazonaws.com"
-port = "5432"
-database = "postgres"
-user = "postgres"
-password = "admin123"
+# Load the database configuration from the config file
+config = configparser.ConfigParser()
+config.read('data_transfer_AWS/db_config.ini')
+
+# Connection details from the config file
+host = config['postgresql']['host']
+port = config['postgresql']['port']
+database = config['postgresql']['database']
+user = config['postgresql']['user']
+password = config['postgresql']['password']
+
+# Path to the cleaned CSV file
 clean_csv_file_path = "/workspaces/Clinical-Genomics-Variant/output/database/GRCh38_indels_variant_clean.csv"
 
 try:

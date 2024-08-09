@@ -1,7 +1,21 @@
 import os
 import sqlite3
-import pandas as pd
 import argparse
+
+def extract_chromosome_digit(chrom):
+    """
+    Extracts the numeric part of the chromosome identifier.
+
+    Args:
+        chrom (str): Chromosome identifier (e.g., 'chr1', 'chrX').
+
+    Returns:
+        str: The numeric part of the chromosome as a string, or 'X', 'Y', 'MT' for non-numeric chromosomes.
+    """
+    if chrom.startswith('chr'):
+        chrom = chrom[3:]  # Remove 'chr' prefix if present
+    
+    return chrom  # Return the remaining part (e.g., '1', 'X', 'Y', 'MT')
 
 def read_vcf_file(vcf_file):
     """
@@ -23,8 +37,9 @@ def read_vcf_file(vcf_file):
                 print(f"Skipping malformed line: {line.strip()}")
                 continue
             chrom, pos, _, ref, alt, qual, filter_, info = fields[:8]
+            chrom_digit = extract_chromosome_digit(chrom)
             variants.append({
-                'chrom': chrom,
+                'chrom': chrom_digit,
                 'pos': int(pos),
                 'ref': ref,
                 'alt': alt,
@@ -65,19 +80,8 @@ def check_expected_variations(db_path, vcf_variants):
 
         result = cursor.fetchone()
         if result:
-            #print("results", result)
             gnomad_data = {
-                'af': result[10]  ## The rest of the gnomad data has been commented out for now
-                # ,'af_eas': result[11],
-                # 'af_nfe': result[12],
-                # 'af_fin': result[13],
-                # 'af_amr': result[14],
-                # 'af_afr': result[15],
-                # 'af_asj': result[16],
-                # 'af_oth': result[17],
-                # 'af_sas': result[18],
-                # 'af_mid': result[19],
-                # 'af_ami': result[20]
+                'af': result[10]  # Adjust this index as needed based on your table structure
             }
             gene_affected = result[24]
             clinical_label = result[27]
@@ -99,23 +103,27 @@ def check_expected_variations(db_path, vcf_variants):
 
 def output_results(expected_variations, unexpected_variations):
     """
-    Outputs the results of the expected and unexpected variations.
+    Outputs the results of the expected and unexpected variations, and prints the count of expected variations.
 
     Args:
         expected_variations (list): List of expected variant information.
         unexpected_variations (list): List of unexpected variant information.
     """
-    print("Expected Variations:")
+    expected_count = len(expected_variations)
+    #print(f"Number of Expected Variations: {expected_count}")
+
+    print("\nExpected Variations:")
     for var in expected_variations:
         print(f"Variant: {var['variant']}")
-        print("affect gene:", var['affected_gene'])
+        print("Affected Gene:", var['affected_gene'])
         print(f"Clinical Label: {var['clinical_label']}")
         print(f"Clinically Relevant: {var['clinically_relevant']}")
         print(f"gnomAD Data: {var['gnomad_data']}")
         print("")
-    
-    ## Not match on database
-    # print("Unexpected Variations:")
+
+    print(f"Number of Expected Variations: {expected_count}")
+    print("Unexpected Variations:")
+    #### I have commented the unexpected variants, the ones that are not linked to a gap in the genome)
     # for var in unexpected_variations:
     #     print(f"Variant: {var}")
     #     print("")
@@ -124,7 +132,6 @@ def main():
     """
     Main function to handle argument parsing and function execution.
     """
-    #print("Executing main function...")
     parser = argparse.ArgumentParser(description="Check for expected variations in a given VCF input and interface with the database.")
     parser.add_argument('db_path', help="Path to the SQLite database")
     parser.add_argument('vcf_file', help="Path to the input VCF file")

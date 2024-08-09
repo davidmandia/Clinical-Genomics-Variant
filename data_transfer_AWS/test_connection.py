@@ -1,11 +1,5 @@
 import psycopg2
-
-# Connection details
-host = "clinical-variant.cjcmykm4g8ti.us-east-1.rds.amazonaws.com"
-port = "5432"
-database = "postgres"
-user = "postgres"
-password = "admin123"
+import os
 
 def fetch_and_print_table_data(connection, table_name, limit=5):
     try:
@@ -21,7 +15,7 @@ def fetch_and_print_table_data(connection, table_name, limit=5):
         
         # Print the column names
         column_names = [desc[0] for desc in cursor.description]
-        print(f"Columns in {table_name}: {', '.join(column_names)}")
+        print(f"\nColumns in {table_name}: {', '.join(column_names)}")
         
         # Print the rows
         print(f"First {limit} rows from {table_name}:")
@@ -35,6 +29,13 @@ def fetch_and_print_table_data(connection, table_name, limit=5):
         print(f"Error fetching data from {table_name}: {error}")
 
 try:
+    # Connection details from environment variables
+    host = os.getenv("DB_HOST", "clinical-variant.cjcmykm4g8ti.us-east-1.rds.amazonaws.com")
+    port = os.getenv("DB_PORT", "5432")
+    database = os.getenv("DB_NAME", "postgres")
+    user = os.getenv("DB_USER", "postgres")
+    password = os.getenv("DB_PASSWORD", "admin123")
+    
     # Establishing the connection
     connection = psycopg2.connect(
         host=host,
@@ -44,6 +45,8 @@ try:
         password=password
     )
     
+    print("Connected to the PostgreSQL database.")
+
     # Fetch and print data from 'variants' table
     fetch_and_print_table_data(connection, "variants")
     
@@ -52,6 +55,7 @@ try:
     
     # Close the connection
     connection.close()
+    print("Database connection closed.")
     
 except Exception as error:
     print(f"Error while connecting to PostgreSQL: {error}")

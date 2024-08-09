@@ -2,6 +2,7 @@ import psycopg2
 import argparse
 import os
 import re
+import configparser
 
 def execute_sql_file(cursor, sql_file_path):
     with open(sql_file_path, 'r', encoding='utf-8') as file:
@@ -40,12 +41,15 @@ def main():
 
     sql_file_path = args.sql_file_path
 
-    # Connection details
-    host = "clinical-variant.cjcmykm4g8ti.us-east-1.rds.amazonaws.com"
-    port = "5432"
-    database = "postgres"  # Replace with your database name
-    user = "postgres"  # Replace with your username
-    password = "admin123"  # Replace with your password
+    # Read database configuration from the configuration file
+    config = configparser.ConfigParser()
+    config.read('data_transfer_AWS/db_config.ini')
+
+    host = config['postgresql']['host']
+    port = config['postgresql']['port']
+    database = config['postgresql']['database']
+    user = config['postgresql']['user']
+    password = config['postgresql']['password']
 
     try:
         # Establishing the connection

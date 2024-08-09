@@ -2,7 +2,8 @@ import json
 import re
 
 class JudgementVariantList:
-    def __init__(self, judgement_file_path_five,judgement_file_path_three,judgement_file_path_refseq, judgement_file_path_ensembl,judgement_file_path_refseq_ensembl,judgement_file_path_no_gap, lovd_file, source):
+    def __init__(self, final_path,judgement_file_path_five,judgement_file_path_three,judgement_file_path_refseq, judgement_file_path_ensembl,judgement_file_path_refseq_ensembl,judgement_file_path_no_gap, lovd_file, source):
+        self.final_path=final_path
         self.judgement_file_path_five = judgement_file_path_five
         self.judgement_file_path_three=judgement_file_path_three
         self.judgement_file_path_refseq=judgement_file_path_refseq
@@ -75,54 +76,60 @@ class JudgementVariantList:
                 categories['3_prime_UTR'].append(variant_key)
         return categories
     
+    def read_pre(self,dict,dict_categories,output_json,num):
+        key_index=list(dict_categories.keys())
+        for line in dict_categories[key_index[num]]:
+            if not line.endswith('\n'):
+                dict[line]=output_json[line]
+        return dict        
+
     def write_to_file(self):
         content=self.process_list()
+        output=self.read_list()
+        with open(self.final_path,'w') as files:
+            json.dump(output,files,indent=4)
         with open(self.judgement_file_path_five,'w') as file1:
-            for line1 in content['5_prime_UTR']:
-                if not line1.endswith('\n'):
-                    line1 += '\n'
-                file1.write(line1)
+            dict1={}
+            self.read_pre(dict1,content,output,0)
+            json.dump(dict1,file1,indent=4)
         with open(self.judgement_file_path_three,'w') as file2:
-            for line2 in content['3_prime_UTR']:
-                if not line2.endswith('\n'):
-                    line2 += '\n'
-                file2.write(line2)
+            dict2={}
+            self.read_pre(dict2,content,output,1)
+            json.dump(dict2,file2,indent=4)
         with open(self.judgement_file_path_refseq,'w') as file3:
-            for line3 in content['gap_in_refseq_not_in_ensembl']:
-                if not line3.endswith('\n'):
-                    line3 += '\n'
-                file3.write(line3)
+            dict3={}
+            self.read_pre(dict3,content,output,2)
+            json.dump(dict3,file3,indent=4)
         with open(self.judgement_file_path_ensembl,'w') as file4:
-            for line4 in content['gap_not_in_refseq_but_in_ensembl']:
-                if not line4.endswith('\n'):
-                    line4 += '\n'
-                file4.write(line4)
+            dict4={}
+            self.read_pre(dict4,content,output,3)
+            json.dump(dict4,file4,indent=4)
         with open(self.judgement_file_path_refseq_ensembl,'w') as file5:
-            for line5 in content['gap_in_refseq_and_ensembl']:
-                if not line5.endswith('\n'):
-                    line5 += '\n'
-                file5.write(line5)
+            dict5={}
+            self.read_pre(dict5,content,output,4)
+            json.dump(dict5,file5,indent=4)
         with open(self.judgement_file_path_no_gap,'w') as file6:
-            for line6 in content['no_gap_found']:
-                if not line6.endswith('\n'):
-                    line6 += '\n'
-                file6.write(line6)
+            dict6={}
+            self.read_pre(dict6,content,output,5)
+            json.dump(dict6,file6,indent=4)
 if __name__ == "__main__":
     lovd_json_path_GRCh37 = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/GRCh37lovd.json'
     lovd_json_path_GRCh38 = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/GRCh38lovd.json'
-    judgement_file_path37_five = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_five_prime_utr.txt'
-    judgement_file_path37_three= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_three_prime_utr.txt'
-    judgement_file_path37_refseq= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gaps_in_refseq_not_in_ensembl.txt'
-    judgement_file_path37_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gaps_not_in_refseq_in_ensembl.txt'
-    judgement_file_path37_refseq_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gap_in_refseq_and_ensembl.txt'
-    judgement_file_path37_no_gap= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_no_gap.txt'
-    judgement_file_path38_five = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_five_prime_utr.txt'
-    judgement_file_path38_three= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_three_prime_utr.txt'
-    judgement_file_path38_refseq= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gaps_in_refseq_not_in_ensembl.txt'
-    judgement_file_path38_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gaps_not_in_refseq_in_ensembl.txt'
-    judgement_file_path38_refseq_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gap_in_refseq_and_ensembl.txt'
-    judgement_file_path38_no_gap= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_no_gap.txt'
-    Select_result_37 = JudgementVariantList(judgement_file_path37_five,judgement_file_path37_three,judgement_file_path37_refseq, judgement_file_path37_ensembl,judgement_file_path37_refseq_ensembl,judgement_file_path37_no_gap,lovd_json_path_GRCh37, 'GRCh37')
-    Select_result_38 = JudgementVariantList(judgement_file_path38_five,judgement_file_path38_three,judgement_file_path38_refseq, judgement_file_path38_ensembl,judgement_file_path38_refseq_ensembl,judgement_file_path38_no_gap,lovd_json_path_GRCh38, 'GRCh38')
+    final_path_GRch37='C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37_lovd.json'
+    final_path_GRch38='C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38_lovd.json'
+    judgement_file_path37_five = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_five_prime_utr.json'
+    judgement_file_path37_three= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_three_prime_utr.json'
+    judgement_file_path37_refseq= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gaps_in_refseq_not_in_ensembl.json'
+    judgement_file_path37_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gaps_not_in_refseq_in_ensembl.json'
+    judgement_file_path37_refseq_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_gap_in_refseq_and_ensembl.json'
+    judgement_file_path37_no_gap= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37/GRCh37_no_gap.json'
+    judgement_file_path38_five = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_five_prime_utr.json'
+    judgement_file_path38_three= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_three_prime_utr.json'
+    judgement_file_path38_refseq= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gaps_in_refseq_not_in_ensembl.json'
+    judgement_file_path38_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gaps_not_in_refseq_in_ensembl.json'
+    judgement_file_path38_refseq_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_gap_in_refseq_and_ensembl.json'
+    judgement_file_path38_no_gap= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38/GRCh38_no_gap.json'
+    Select_result_37 = JudgementVariantList(final_path_GRch37,judgement_file_path37_five,judgement_file_path37_three,judgement_file_path37_refseq, judgement_file_path37_ensembl,judgement_file_path37_refseq_ensembl,judgement_file_path37_no_gap,lovd_json_path_GRCh37, 'GRCh37')
+    Select_result_38 = JudgementVariantList(final_path_GRch38,judgement_file_path38_five,judgement_file_path38_three,judgement_file_path38_refseq, judgement_file_path38_ensembl,judgement_file_path38_refseq_ensembl,judgement_file_path38_no_gap,lovd_json_path_GRCh38, 'GRCh38')
     result37=Select_result_37.write_to_file()
     result38=Select_result_38.write_to_file()

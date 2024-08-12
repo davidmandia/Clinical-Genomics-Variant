@@ -9,7 +9,7 @@ pip install pytest
 #input file:
 #https://s3.eu-central-1.amazonaws.com/platinum-genomes/2017-1.0/hg38/small_variants/NA12878/NA12878.vcf.gz
 
-
+# https://s3.eu-central-1.amazonaws.com/platinum-genomes/2017-1.0/hg19/small_variants/NA12878/NA12878.vcf.gz
 # For AWs deployment 
 sqlite3 output/database/GRCh38_indels_variant.db .dump > data_transfer_AWS/GRCh38_indels_variant.sql
 pip install psycopg2

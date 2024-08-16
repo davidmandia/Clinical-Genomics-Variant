@@ -1,29 +1,29 @@
 file list,num of all the variants
 ('GRCh38_five_prime_utr.json', 'GRCh38_no_gap.json'), 3252
 
-('GRCh38_five_prime_utr.json', 'GRCh38_gaps_in_refseq_not_in_ensembl.json'), 528
+('GRCh38_five_prime_utr.json', 'GRCh38_gap_in_refseq_and_ensembl.json'), 528
 
 ('GRCh38_five_prime_utr.json', 'GRCh38_no_gap.json', 'GRCh38_three_prime_utr.json'), 166
 
-('GRCh38_five_prime_utr.json', 'GRCh38_gaps_in_refseq_not_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 30
+('GRCh38_five_prime_utr.json', 'GRCh38_gap_in_refseq_and_ensembl.json', 'GRCh38_three_prime_utr.json'), 30
 
-('GRCh38_five_prime_utr.json', 'GRCh38_gap_in_refseq_and_ensembl.json'), 18
+('GRCh38_five_prime_utr.json', 'GRCh38_gaps_not_in_refseq_in_ensembl.json'), 18
 
-('GRCh38_five_prime_utr.json', 'GRCh38_gaps_not_in_refseq_in_ensembl.json'), 76
+('GRCh38_five_prime_utr.json', 'GRCh38_gaps_in_refseq_not_in_ensembl.json'), 76
 
-('GRCh38_five_prime_utr.json', 'GRCh38_gaps_not_in_refseq_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 3
+('GRCh38_five_prime_utr.json', 'GRCh38_gaps_in_refseq_not_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 3
 
-('GRCh38_gaps_in_refseq_not_in_ensembl.json',), 502
+('GRCh38_gaps_in_refseq_not_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 146
 
-('GRCh38_gaps_in_refseq_not_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 1679
+('GRCh38_gaps_in_refseq_not_in_ensembl.json',), 43
 
-('GRCh38_gaps_not_in_refseq_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 146
+('GRCh38_gaps_not_in_refseq_in_ensembl.json', 'GRCh38_three_prime_utr.json'), 6
 
-('GRCh38_gaps_not_in_refseq_in_ensembl.json',), 43
+('GRCh38_gaps_not_in_refseq_in_ensembl.json',), 10
 
-('GRCh38_gap_in_refseq_and_ensembl.json', 'GRCh38_three_prime_utr.json'), 6
+('GRCh38_gap_in_refseq_and_ensembl.json',), 502
 
-('GRCh38_gap_in_refseq_and_ensembl.json',), 10
+('GRCh38_gap_in_refseq_and_ensembl.json', 'GRCh38_three_prime_utr.json'), 1679
 
 ('GRCh38_no_gap.json', 'GRCh38_three_prime_utr.json'), 12562
 

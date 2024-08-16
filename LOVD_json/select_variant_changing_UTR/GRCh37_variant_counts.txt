@@ -1,0 +1,15 @@
+file list,num of all the variants
+('GRCh37_five_prime_utr.json',), 137
+
+('GRCh37_five_prime_utr.json', 'GRCh37_three_prime_utr.json'), 23
+
+('GRCh37_gaps_in_refseq_not_in_ensembl.json',), 91
+
+('GRCh37_gaps_not_in_refseq_in_ensembl.json',), 1
+
+('GRCh37_gap_in_refseq_and_ensembl.json',), 46
+
+('GRCh37_no_gap.json',), 318
+
+('GRCh37_three_prime_utr.json',), 274
+

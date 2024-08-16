@@ -1,0 +1,13 @@
+file list,num of all the variants
+('GRCh38_five_prime_utr.json',), 3874
+
+('GRCh38_five_prime_utr.json', 'GRCh38_three_prime_utr.json'), 199
+
+('GRCh38_gaps_in_refseq_not_in_ensembl.json',), 43
+
+('GRCh38_gap_in_refseq_and_ensembl.json',), 502
+
+('GRCh38_no_gap.json',), 4639
+
+('GRCh38_three_prime_utr.json',), 14393
+

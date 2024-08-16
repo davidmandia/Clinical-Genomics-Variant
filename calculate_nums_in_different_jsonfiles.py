@@ -51,6 +51,10 @@ if __name__ == "__main__":
     output_file_GRCh37 = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh37_variant_counts.txt'
     directory_GRCh38 = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38'
     output_file_GRCh38 = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/Select_variant/GRCh38_variant_counts.txt'
+    directory_GRCh37_change = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh37'
+    output_file_GRCh37_change = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh37_variant_counts.txt'
+    directory_GRCh38_change = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38'
+    output_file_GRCh38_change = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38_variant_counts.txt'
     analyzer_GRCh37 = VariantAnalyzer(directory_GRCh37, output_file_GRCh37)
     analyzer_GRCh37.analyze()
     analyzer_GRCh37.output()   
@@ -59,3 +63,11 @@ if __name__ == "__main__":
     analyzer_GRCh38.analyze()
     analyzer_GRCh38.output()   
     analyzer_GRCh38.write_variant_counts_to_file()
+    analyzer_GRCh37_change = VariantAnalyzer(directory_GRCh37_change, output_file_GRCh37_change)
+    analyzer_GRCh37_change.analyze()
+    analyzer_GRCh37_change.output()   
+    analyzer_GRCh37_change.write_variant_counts_to_file()
+    analyzer_GRCh38_change = VariantAnalyzer(directory_GRCh38_change, output_file_GRCh38_change)
+    analyzer_GRCh38_change.analyze()
+    analyzer_GRCh38_change.output()   
+    analyzer_GRCh38_change.write_variant_counts_to_file()

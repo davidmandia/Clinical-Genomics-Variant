@@ -5,6 +5,12 @@
 
 This project provides a suite of Python scripts for genomic data processing and analysis, focusing on short indels, variant annotation, and clinical relevance. It includes tools for reading and processing VCF files, querying clinical relevance databases, and annotating variants with additional genomic information.
 
+
+Please find below the overall flowchart 
+![Flowchart](Methods_Flowchart_Simple_Scientific.png)
+
+
+
 ## Features
 
 1. **Short Indel Identification**: 

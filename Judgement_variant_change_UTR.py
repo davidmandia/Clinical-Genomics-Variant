@@ -126,7 +126,7 @@ if __name__ == "__main__":
     judgement_file_path38_five = 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_five_prime_utr.json'
     judgement_file_path38_three= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_three_prime_utr.json'
     judgement_file_path38_refseq= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_gaps_in_refseq_not_in_ensembl.json'
-    judgement_file_path38_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38_gaps_not_in_refseq_in_ensembl.json'
+    judgement_file_path38_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_gaps_not_in_refseq_in_ensembl.json'
     judgement_file_path38_refseq_ensembl= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_gap_in_refseq_and_ensembl.json'
     judgement_file_path38_no_gap= 'C:/Dissertation_project/Clinical-Genomics-Variant/LOVD_json/select_variant_changing_UTR/GRCh38/GRCh38_no_gap.json'
     Select_result_37 = JudgementVariantList(final_path_GRch37,judgement_file_path37_five,judgement_file_path37_three,judgement_file_path37_refseq_ensembl,judgement_file_path37_refseq, judgement_file_path37_ensembl,judgement_file_path37_no_gap,lovd_json_path_GRCh37, 'GRCh37')

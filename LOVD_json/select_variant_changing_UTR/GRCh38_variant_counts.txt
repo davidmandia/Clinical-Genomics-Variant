@@ -5,6 +5,8 @@ file list,num of all the variants
 
 ('GRCh38_gaps_in_refseq_not_in_ensembl.json',), 43
 
+('GRCh38_gaps_not_in_refseq_in_ensembl.json',), 10
+
 ('GRCh38_gap_in_refseq_and_ensembl.json',), 502
 
 ('GRCh38_no_gap.json',), 4639

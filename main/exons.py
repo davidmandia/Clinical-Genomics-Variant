@@ -42,6 +42,6 @@ def extract_exons_from_gff(gff_file):
     return exons_df
 
 # Example 
-exons_df = extract_exons_from_gff('gff_data/GCF_000001405.25_GRCh37.p13_genomic.gff')
-exons_df.to_csv("main/exons_GRCh37.csv")
+exons_df = extract_exons_from_gff("gff_data/GCF_000001405.40-RS_2023_03_genomic.gff")
+exons_df.to_csv("main/exons_GRCh38.csv")
 print(exons_df.head())

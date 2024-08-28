@@ -115,6 +115,9 @@
                 var alt = fields[4];
 
                 var apiURL = 'https://rlmjmeogu7.execute-api.us-east-1.amazonaws.com/default/Run_vcf';
+                const headers = {'Content-Type':'application/json',
+                    'Access-Control-Allow-Origin':'*',
+                    'Access-Control-Allow-Methods':'POST,PATCH,OPTIONS'}
                 var requestBody = {
                     chrom: chrom,
                     pos: pos,
@@ -125,9 +128,7 @@
 
                 fetch(apiURL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: headers, 
                     body: JSON.stringify(requestBody),
                 })
                 .then(response => response.json())

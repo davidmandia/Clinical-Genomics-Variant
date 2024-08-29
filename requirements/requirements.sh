@@ -26,3 +26,9 @@ sqlite3 output/database/GRCh37_indels_variant.db .dump > data_transfer_AWS/GRCh3
 
 
 
+## ext validation
+# GRCh37 
+wget https://s3.eu-central-1.amazonaws.com/platinum-genomes/2017-1.0/hg19/small_variants/NA12878/NA12878.vcf.gz
+# GRCh38 
+
+wget https://s3.eu-central-1.amazonaws.com/platinum-genomes/2017-1.0/hg38/small_variants/NA12878/NA12878.vcf.gz

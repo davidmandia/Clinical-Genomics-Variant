@@ -10,3 +10,4 @@ main/*.csv filter=lfs diff=lfs merge=lfs -text
 main/exons.csv filter=lfs diff=lfs merge=lfs -text
 main/exons_GRCh37.csv filter=lfs diff=lfs merge=lfs -text
 main/exons_GRCh38.csv filter=lfs diff=lfs merge=lfs -text
+main/exons_GRCh* filter=lfs diff=lfs merge=lfs -text

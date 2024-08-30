@@ -7,7 +7,7 @@ import os
 
 def read_database(db_path):
     conn = sqlite3.connect(db_path)
-    df = pd.read_sql_query("SELECT * FROM variants", conn)
+    df = pd.read_sql_query("SELECT DISTINCT transcript_ref FROM variants", conn)
     conn.close()
     return df
 
@@ -19,6 +19,11 @@ def plot_reference_types(df, output_dir, db_name):
     
     plt.figure(figsize=(12, 8))
     sns.barplot(x=ref_type_counts.values, y=ref_type_counts.index, palette="pastel")
+
+    # Add count labels on each bar
+    for i, v in enumerate(ref_type_counts.values):
+        plt.text(v + 0.02, i, str(v), color='black', va='center', fontsize=16)
+
     plt.title(f'Distribution of Reference Types in {db_name}', fontsize=24)
     plt.xlabel('Count', fontsize=20)
     plt.ylabel('Reference Type', fontsize=20)
@@ -64,7 +69,7 @@ def main():
     
     plot_reference_types(df, output_dir, db_name)
     
-    highest_versions_df = get_highest_transcript_versions(df, output_dir, db_name)
+    #highest_versions_df = get_highest_transcript_versions(df, output_dir, db_name)
     
     #print("Rows with the highest transcript versions:")
     #print(highest_versions_df)

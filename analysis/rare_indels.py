@@ -45,22 +45,26 @@ def analyze_rare_indels(rare_indels, output_dir, db_name):
 
     gene_counts = rare_indels['genes'].value_counts()
 
-    top_genes = gene_counts.head(20)
+    top_genes = gene_counts.head(8)
 
     plt.figure(figsize=(18, 10))
     sns.barplot(x=top_genes.index, y=top_genes.values, palette="viridis")
-    plt.title(f'Top 20 Genes Most Frequently Affected by Rare Indels in {db_name}', fontsize=22)
-    plt.xlabel('Gene', fontsize=20)
-    plt.ylabel('Count', fontsize=20)
-    plt.xticks(rotation=45, ha='right', fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.title(f'Genes Most Frequently Affected by Rare Indels in GRCh38', fontsize=30)
+    plt.xlabel('Gene', fontsize=30)
+    plt.ylabel('Count', fontsize=30)
+    plt.xticks(rotation=45, ha='right', fontsize=30)
+    plt.yticks(fontsize=30)
     
     table_data = top_genes.reset_index().values
     cell_text = []
     for row in table_data:
         cell_text.append([row[0], int(row[1])])
 
-    plt.table(cellText=cell_text, colLabels=['Gene', 'Count'], cellLoc='center', loc='right', bbox=[1.05, 0, 0.3, 1], edges='horizontal', fontsize=16)
+    table = plt.table(cellText=cell_text, colLabels=['Gene', 'Count'], cellLoc='center', loc='right', bbox=[1.05, 0, 0.3, 1], edges='horizontal')
+
+    # Set font size for the table
+    table.auto_set_font_size(False)
+    table.set_fontsize(17)  
 
     plt.tight_layout()
     plt.savefig(f"{output_dir}/rare_indels_{db_name}_gene_counts.png", bbox_inches='tight')

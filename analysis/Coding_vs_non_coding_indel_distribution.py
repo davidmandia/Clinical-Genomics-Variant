@@ -33,9 +33,9 @@ def analyze_coding_vs_noncoding(df, output_dir, db_name):
         'splice_acceptor_variant', 'intron_variant', 'intergenic_variant'
     ]
     
-    df['region'] = df['consequences'].apply(lambda x: 'coding' if any(term in x for term in coding_terms) else 'non-coding')
+    df['Region'] = df['consequences'].apply(lambda x: 'Coding' if any(term in x for term in coding_terms) else 'Non-coding')
     
-    region_counts = df['region'].value_counts()
+    region_counts = df['Region'].value_counts()
     
     # Plot the distribution of indels in coding vs. non-coding regions
     sns.set(style="whitegrid")
@@ -43,13 +43,13 @@ def analyze_coding_vs_noncoding(df, output_dir, db_name):
     
     sns.barplot(x=region_counts.index, y=region_counts.values, palette=['skyblue', 'lightcoral'], alpha=0.7)
     plt.title('Distribution of Indels in Coding vs. Non-coding Regions', fontsize=20, pad=20)
-    plt.xlabel('Region', fontsize=16)
-    plt.ylabel('Count', fontsize=16)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.xlabel('Region', fontsize=25)
+    plt.ylabel('Count', fontsize=25)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
     
     for i, count in enumerate(region_counts.values):
-        plt.text(i, count + 500, str(count), ha='center', fontsize=14)
+        plt.text(i, count + 500, str(count), ha='center', fontsize=25)
     
     plt.tight_layout()
     plt.savefig(f"{output_dir}/indel_{db_name}_distribution_coding_vs_noncoding.png")

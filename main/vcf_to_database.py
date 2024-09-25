@@ -155,13 +155,14 @@ def create_database(db_name):
 
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
+    ## remove qual and filter from the table, add latest version
     cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS variants (
             chrom TEXT,
             pos INTEGER,
             ref TEXT,
             alt TEXT,
-            qual REAL,
+            qual REAL, 
             filter TEXT,
             genomic_ref TEXT,
             operation TEXT,

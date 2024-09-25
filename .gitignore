@@ -3,3 +3,4 @@ input/*
 gff_data/*
 external_testing/*
 data_transfer_AWS/db_config.ini
+main/*.csv

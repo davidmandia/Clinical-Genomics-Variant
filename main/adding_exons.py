@@ -25,7 +25,7 @@ def update_exons_in_db(csv_file, db_file):
             Chromosome TEXT,
             Start INTEGER,
             End INTEGER,
-            Gene_ID TEXT,
+            Gene_ID_TEXT,
             Transcript_ID TEXT,
             Exon_ID TEXT
         )
@@ -42,30 +42,31 @@ def update_exons_in_db(csv_file, db_file):
     updates = []
 
     # Fetch existing variants from the database
-    variants_df = pd.read_sql_query("SELECT chrom, pos FROM variants", conn)
+    variants_df = pd.read_sql_query("SELECT chrom, pos, transcript_ref FROM variants", conn)
 
     # Update each variant with matching exon information
     for index, variant in variants_df.iterrows():
         chrom = variant['chrom']
         pos = variant['pos']
+        transcipt_id = variant['transcript_ref']
         
         # Match on chromosome and position range
         cursor.execute("""
             SELECT Exon_ID FROM exons 
-            WHERE Chromosome = ? AND Start <= ? AND End >= ?
-        """, (chrom, pos, pos))
+            WHERE Chromosome = ? AND Start <= ? AND End >= ? AND Transcript_ID = ?
+        """, (chrom, pos, pos, transcipt_id))
         
         matching_exons = cursor.fetchall()
         if matching_exons:
             exon_ids = ','.join([exon[0] for exon in matching_exons])
-            updates.append((exon_ids, chrom, pos))
+            updates.append((exon_ids, chrom, pos, transcipt_id))
             
             # Commit in batches
             if len(updates) >= batch_size:
                 cursor.executemany("""
                     UPDATE variants 
                     SET exon_id = ?
-                    WHERE chrom = ? AND pos = ?
+                    WHERE chrom = ? AND pos = ? AND transcript_ref = ?
                 """, updates)
                 conn.commit()
                 updates = []
@@ -75,7 +76,7 @@ def update_exons_in_db(csv_file, db_file):
         cursor.executemany("""
             UPDATE variants 
             SET exon_id = ?
-            WHERE chrom = ? AND pos = ?
+            WHERE chrom = ? AND pos = ? AND transcript_ref = ?
         """, updates)
 
     conn.commit()

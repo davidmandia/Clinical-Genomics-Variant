@@ -27,3 +27,4 @@ analysis/other/gene_analysis.py filter=lfs diff=lfs merge=lfs -text
 analysis/other/plot_length.py filter=lfs diff=lfs merge=lfs -text
 versioning/results/* filter=lfs diff=lfs merge=lfs -text
 coding_seq/results/* filter=lfs diff=lfs merge=lfs -text
+analysis/results/* filter=lfs diff=lfs merge=lfs -text

@@ -15,24 +15,10 @@ data_transfer/*.sql filter=lfs diff=lfs merge=lfs -text
 <<<<<<< HEAD
 output/VCFs/GRCh37_indels.vcf filter=lfs diff=lfs merge=lfs -text
 output/VCFs/GRCh38_indels.vcf filter=lfs diff=lfs merge=lfs -text
-analysis/other/population_analysis.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/run_analysis.sh filter=lfs diff=lfs merge=lfs -text
-analysis/other/Coding_vs_non_coding_indel_distribution.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/common_indels.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/go_term.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/indel_analysis.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/rare_indels.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/af_distribution.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/finding_genes.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/gene_analysis.py filter=lfs diff=lfs merge=lfs -text
-analysis/other/plot_length.py filter=lfs diff=lfs merge=lfs -text
 versioning/results/* filter=lfs diff=lfs merge=lfs -text
 coding_seq/results/* filter=lfs diff=lfs merge=lfs -text
 analysis/results/* filter=lfs diff=lfs merge=lfs -text
 =======
 >>>>>>> 612546500832e7ceaa4e4a3c02f7e7a52979d6c7
 analysis/results/reference_types_distribution_GRCh38_indels_variant.png filter=lfs diff=lfs merge=lfs -text
-analysis/results/highest_transcript_versions_GRCh37.csv filter=lfs diff=lfs merge=lfs -text
-analysis/results/highest_transcript_versions_GRCh38.csv filter=lfs diff=lfs merge=lfs -text
-analysis/results/highest_transcript_versions_sample.csv filter=lfs diff=lfs merge=lfs -text
 analysis/results/reference_types_distribution_GRCh37_indels_variant.png filter=lfs diff=lfs merge=lfs -text

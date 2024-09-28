@@ -50,6 +50,8 @@ def read_vcf_file(vcf_file):
             if len(fields) < 8:
                 continue  # Skip malformed lines
             chrom, pos, _, ref, alt, qual, filter_, info = fields[:8]
+            if ref == alt:
+                continue
             variants.append({
                 'chrom': chrom,
                 'pos': pos,

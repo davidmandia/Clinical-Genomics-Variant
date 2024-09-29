@@ -22,3 +22,5 @@ analysis/results/* filter=lfs diff=lfs merge=lfs -text
 >>>>>>> 612546500832e7ceaa4e4a3c02f7e7a52979d6c7
 analysis/results/reference_types_distribution_GRCh38_indels_variant.png filter=lfs diff=lfs merge=lfs -text
 analysis/results/reference_types_distribution_GRCh37_indels_variant.png filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+output/* filter=lfs diff=lfs merge=lfs -text

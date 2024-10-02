@@ -129,6 +129,15 @@ def parse_sam(file_path, db, pseudo=False, sleep_time=1):
                             elif op == 'X':
                                 ref_seq = get_sequence_blast_db(db, genome_ref, genomic_pos_0_based, genomic_pos_0_based + length - 1, sleep_time)
                                 alt_seq = transcript_sequence[transcriptomic_pos_offset_0_based:transcriptomic_pos_offset_0_based + length]
+                                ## Ref and alt sequences are the same for mismatches, need to be removed
+                                if ref_seq == alt_seq:
+                                    continue
+                                ## Sometimes SNP of size greater than 1 present the first nucleotide of ref and alt that are the same,
+                                # # if that i the case remove common num=cleotide and move position of +1
+                                if length > 1 and ref_seq[0] == alt_seq[0]:
+                                    ref_seq = ref_seq[1:]
+                                    alt_seq = alt_seq[1:]
+                                    genomic_pos_0_based += 1
 
                         variants.append({
                             'CHROM': chrom,
